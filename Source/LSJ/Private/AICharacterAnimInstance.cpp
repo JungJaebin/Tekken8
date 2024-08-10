@@ -88,9 +88,13 @@ UAICharacterAnimInstance::UAICharacterAnimInstance ( )
     if ( idleMontageFinder.Succeeded ( ) )
        idleMontage = idleMontageFinder.Object;
     static ConstructorHelpers::FObjectFinder <UAnimMontage>attackRHMontageFinder
-    ( TEXT ( "/Script/Engine.AnimMontage'/Game/LSJ/Animation/FinalAnimation/Punching_Anim1_Montage.Punching_Anim1_Montage'" ) );
+    ( TEXT ( "/Script/Engine.AnimMontage'/Game/LSJ/Animation/FinalAnimation/AM_A_PunchBody_R_M2_Montage.AM_A_PunchBody_R_M2_Montage'" ) );
     if ( attackRHMontageFinder.Succeeded ( ) )
         attackRHMontage = attackRHMontageFinder.Object;
+    static ConstructorHelpers::FObjectFinder <UAnimMontage>attackLHMontageFinder
+    ( TEXT ( "/Script/Engine.AnimMontage'/Game/LSJ/Animation/FinalAnimation/Combo1/AM_KB_Cross-L_S_2_Montage.AM_KB_Cross-L_S_2_Montage'" ) );
+    if ( attackLHMontageFinder.Succeeded ( ) )
+        attackLHMontage = attackLHMontageFinder.Object;
     static ConstructorHelpers::FObjectFinder <UAnimMontage>attackLFMontageFinder
     ( TEXT ( "/Script/Engine.AnimMontage'/Game/LSJ/Animation/FinalAnimation/Kicking_Anim1_Montage.Kicking_Anim1_Montage'" ) );
     if ( attackLFMontageFinder.Succeeded ( ) )
@@ -133,6 +137,10 @@ UAICharacterAnimInstance::UAICharacterAnimInstance ( )
     ( TEXT ( "/Script/Engine.AnimMontage'/Game/LSJ/Animation/FinalAnimation/KB_Pivot-R_T1_Montage.KB_Pivot-R_T1_Montage'" ) );
     if ( crossWalkCounterclockwiseMontageFinder.Succeeded ( ) )
         crossWalkCounterclockwiseMontage = crossWalkCounterclockwiseMontageFinder.Object;
+    static ConstructorHelpers::FObjectFinder <UAnimMontage>attackLowerLFMontageFinder
+    ( TEXT ( "/Script/Engine.AnimMontage'/Game/LSJ/Animation/FinalAnimation/AM_LowKick_Left1_Montage.AM_LowKick_Left1_Montage'" ) );
+    if ( attackLowerLFMontageFinder.Succeeded ( ) )
+        attackLowerLFMontage = attackLowerLFMontageFinder.Object;
     static ConstructorHelpers::FObjectFinder<UNiagaraSystem> NE ( TEXT ( "/Script/Niagara.NiagaraSystem'/Game/Jaebin/Effects/Laser.Laser'" ) );
     if ( NE.Succeeded ( ) )
     {
@@ -186,6 +194,11 @@ void UAICharacterAnimInstance::HandleOnMontageEnded ( UAnimMontage* Montage , bo
             owner->ExitCurrentState ( ECharacterStateInteraction::AttackLower );
         }
         else
+		if ( Montage == attackLHMontage )
+		{
+			owner->ExitCurrentState ( ECharacterStateInteraction::AttackLower );
+		}
+        else
             if ( Montage == attackRHMontage )
             {
                 owner->ExitCurrentState ( ECharacterStateInteraction::AttackLower );
@@ -220,6 +233,10 @@ void UAICharacterAnimInstance::HandleOnMontageEnded ( UAnimMontage* Montage , bo
          else if ( Montage == boundMontage )
         {
             owner->ExitCurrentState ( ECharacterStateInteraction::HitFalling );
+        }
+         else if ( Montage == attackLowerLFMontage )
+        {
+            owner->ExitCurrentState ( ECharacterStateInteraction::AttackLower );
         }
     }
 }
@@ -270,7 +287,7 @@ void UAICharacterAnimInstance::PlayerWalkForwardMontage ( )
 {
    // NowLocation = owner->GetActorLocation ( );
    // BeforeLocation = NowLocation;
-    Montage_Play( walkForwardMontage );
+    Montage_Play( walkForwardMontage,1.0f);
 }
 
 void UAICharacterAnimInstance::PlayerWalkBackMontage ( )
@@ -287,10 +304,20 @@ void UAICharacterAnimInstance::PlayeAttackRHMontage ( )
 {
     Montage_Play ( attackRHMontage );
 }
+void UAICharacterAnimInstance::PlayeAttackLHMontage ( )
+{
+    Montage_Play ( attackLHMontage );
+}
 void UAICharacterAnimInstance::PlayeAttackLFMontage ( )
 {
     Montage_Play ( attackLFMontage );
 }
+
+void UAICharacterAnimInstance::PlayeAttackLowerLFMontage ( )
+{
+    Montage_Play ( attackLowerLFMontage );
+}
+
 void UAICharacterAnimInstance::PlayerIdleMontage ( )
 {
     //UAnimMontage* MontageToPlay, float InPlayRate/*= 1.f*/, EMontagePlayReturnType ReturnValueType, float InTimeToStartMontageAt, bool bStopAllMontages
@@ -402,3 +429,7 @@ void UAICharacterAnimInstance::AnimNotify_Laser ( )
 
 }
 
+float UAICharacterAnimInstance::GetCurrentMontageTime ( )
+{
+    return Montage_GetPosition(GetCurrentActiveMontage());
+}

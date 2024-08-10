@@ -25,6 +25,7 @@
 #include "GameMode_MH.h"
 #include "../Plugins/FX/Niagara/Source/Niagara/Public/NiagaraFunctionLibrary.h"
 #include "AIStateWalkCross.h"
+#include "AIStateAttackLH.h"
 
 
 // Sets default values
@@ -43,7 +44,7 @@ AAICharacter::AAICharacter()
 		GetMesh ( )->SetAnimInstanceClass ( animFinder.Class );
 	}
 	GetMesh ( )->SetRelativeScale3D ( FVector ( 0.1f , 0.1f , 0.1f ) );
-	GetMesh( )->SetRelativeLocation(FVector(0,0,-80.f));
+	GetMesh( )->SetRelativeLocation(FVector(0,0,-90.f));
 	GetMesh ( )->SetRelativeRotation ( FRotator (  0, -90.f , 0 ) );
 
 	collisionLH = CreateDefaultSubobject<USphereComponent> ( TEXT ( "collisionLH" ) );
@@ -91,6 +92,8 @@ AAICharacter::AAICharacter()
 	stateAttackLF->SetStateOwner ( this );
 	stateAttackRH = CreateDefaultSubobject<UAIStateAttackRH> ( TEXT ( "stateAttackRH" ) );
 	stateAttackRH->SetStateOwner ( this );
+	stateAttackLH = CreateDefaultSubobject<UAIStateAttackLH> ( TEXT ( "stateAttackLH" ) );
+	stateAttackLH->SetStateOwner ( this );
 	stateHit=CreateDefaultSubobject<UAIStateHit> ( TEXT ( "stateHit" ) );
 	stateHit->SetStateOwner ( this );
 	stateHitFalling = CreateDefaultSubobject<UAIStateHitFalling> ( TEXT ( "stateHitFalling" ) );
@@ -101,13 +104,14 @@ AAICharacter::AAICharacter()
 	stateComboLaserAttack->SetStateOwner ( this );
 	stateWalkCross = CreateDefaultSubobject<UAIStateWalkCross> ( TEXT ( "stateWalkCross" ) );
 	stateWalkCross->SetStateOwner ( this );
-
+	//콤보 공격 정보
 	FAttackInfoInteraction attack1;
 	attack1.KnockBackDirection = FVector (250.f,0.f,0.f); //-0.5 뒤로 밀려난다 5*50 = 250.0f
 	attack1.DamageAmount = 10;
 	attack1.DamagePoint = EDamagePointInteraction::Middle;
-	attack1.HitFrame=23;
-	attack1.RetrieveFrame = 43;
+	attack1.HitFrame= 13;
+	attack1.RetrieveFrame = 11;
+
 	attack1.OwnerGuardFrame = -12;
 	attack1.OppositeHitFrame = 101;
 	attack1.OppositeCounterFrame = 101;
@@ -192,7 +196,48 @@ AAICharacter::AAICharacter()
 	stateComboLaserAttack->attackInfoArray.Add(attack7);
 	stateComboLaserAttack->attackInfoArray.Add(attack8);
 	stateComboLaserAttack->attackInfoArray.Add(attack9);
-	stateComboLaserAttack->SetStateOwner ( this );
+
+	FAttackInfoInteraction attackRHMiddle;
+	attackRHMiddle.KnockBackDirection = FVector ( 300.f , 0.f , 50.f ); //-0.5 보다 적게 예상 3*
+	attackRHMiddle.DamageAmount = 23;
+	attackRHMiddle.DamagePoint = EDamagePointInteraction::Middle;
+	attackRHMiddle.HitFrame = 20; //HitFrame
+	attackRHMiddle.RetrieveFrame = 19; //회수Frame
+	//내가 손해면 - 상대가 손해면 +
+	attackRHMiddle.HitFrame = 60;
+	attackRHMiddle.GrardFrame = -12; 
+	attackRHMiddle.CounterFrame = 60; 
+	attackRHMiddle.MissFrame = 0;
+	SetAttackInfoOwnerOpposite(attackRHMiddle); //나머지값 넣기
+	stateAttackRH->attackInfoArray.Add ( attackRHMiddle );
+
+	//내가 손해면 - 상대가 손해면 +
+	FAttackInfoInteraction attackTopLH;
+	attackTopLH.KnockBackDirection = FVector ( 300.f , 0.f , 50.f ); //-0.5 보다 적게 예상 3*
+	attackTopLH.DamageAmount = 5;
+	attackTopLH.DamagePoint = EDamagePointInteraction::Top;
+	attackTopLH.HitFrame = 10; //HitFrame
+	attackTopLH.RetrieveFrame = 20; //회수Frame
+	attackTopLH.GrardFrame = 1;
+	attackTopLH.HitFrame = 8;
+	attackTopLH.CounterFrame = 8;
+	attackTopLH.MissFrame = 0;
+	SetAttackInfoOwnerOpposite ( attackTopLH );
+	stateAttackLH->attackInfoArray.Add ( attackTopLH );
+
+	//내가 손해면 - 상대가 손해면 +
+	FAttackInfoInteraction attackLowerLF;
+	attackLowerLF.KnockBackDirection = FVector ( 300.f , 0.f , 50.f ); //-0.5 보다 적게 예상 3*
+	attackLowerLF.DamageAmount = 7;
+	attackLowerLF.DamagePoint = EDamagePointInteraction::Lower;
+	attackLowerLF.HitFrame = 12; //HitFrame
+	attackLowerLF.RetrieveFrame = 15; //회수Frame
+	attackLowerLF.GrardFrame = -13;
+	attackLowerLF.HitFrame = -2;
+	attackLowerLF.CounterFrame = -2;
+	attackLowerLF.MissFrame = 0;
+	SetAttackInfoOwnerOpposite ( attackLowerLF );
+	stateAttackLF->attackInfoArray.Add ( attackLowerLF );
 	
 	static ConstructorHelpers::FObjectFinder<UNiagaraSystem> NE ( TEXT ( "/Script/Niagara.NiagaraSystem'/Game/Jaebin/Effects/Hit_High.Hit_High'" ) );
 	if ( NE.Succeeded ( ) )
@@ -203,11 +248,24 @@ AAICharacter::AAICharacter()
 	//GetCharacterMovement()->bApplyGravityWhileJumping = true;
 	//앞으로만 이동되게 하는 설정
 	//GetCharacterMovement ( )->bOrientRotationToMovement = true;
+	eCharacterState = ECharacterStateInteraction::Idle;
 
 	AIControllerClass = AAICharacterController::StaticClass();
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 }
+void AAICharacter::SetAttackInfoOwnerOpposite ( FAttackInfoInteraction& attackInfo )
+{
+	//공격자
+	attackInfo.OwnerHitFrame = attackInfo.RetrieveFrame + (attackInfo.HitFrame < 0 ? attackInfo.HitFrame * -1 : 0);
+	attackInfo.OwnerGuardFrame = attackInfo.RetrieveFrame + (attackInfo.GrardFrame < 0 ? attackInfo.GrardFrame * -1 : 0);
+	attackInfo.OwnerCounterFrame = attackInfo.RetrieveFrame + (attackInfo.CounterFrame < 0 ? attackInfo.CounterFrame * -1 : 0);
+	attackInfo.OwnerMissFrame = attackInfo.RetrieveFrame + (attackInfo.MissFrame < 0 ? attackInfo.MissFrame * -1 : 0);
 
+	//수비자
+	attackInfo.OppositeHitFrame = attackInfo.RetrieveFrame + (attackInfo.HitFrame > 0 ? attackInfo.HitFrame : 0);
+	attackInfo.OppositeGuardFrame = attackInfo.RetrieveFrame + (attackInfo.GrardFrame > 0 ? attackInfo.GrardFrame : 0);
+	attackInfo.OppositeCounterFrame = attackInfo.RetrieveFrame + (attackInfo.CounterFrame > 0 ? attackInfo.CounterFrame : 0);
+}
 // Called when the game starts or when spawned
 void AAICharacter::BeginPlay()
 {
@@ -275,6 +333,70 @@ void AAICharacter::Tick(float DeltaTime)
 		FVector Gravity = FVector ( 0 , 0 , -980 ); // 기본 중력 값
 		AddMovementInput ( Gravity * DeltaTime,true);
 	}
+
+	if ( nullptr != aOpponentPlayer )
+	{
+		FString state = "";
+		switch ((int) aOpponentPlayer->eCharacterState )
+		{
+		case 0:
+			state = "move";
+			break;
+		case 1:
+			state = "Idle";
+			break;
+		case 2:
+			state = "AttackLower";
+			break;
+		case 3:
+			state = "AttackMiddle";
+			break;
+		case 4:
+			state = "AttackTop";
+			break;
+		case 5:
+			state = "Air";
+			break;
+		case 6:
+			state = "HitGround";
+			break;
+		case 7:
+			state = "HitFalling";
+			break;
+		case 8:
+			state = "GuardStand";
+			break;
+		case 9:
+			state = "GuardSit";
+			break;
+		case 10:
+			state = "Sit";
+			break;
+		case 11:
+			state = "Down";
+			break;
+		case 12:
+			state = "Up";
+			break;
+		case 13:
+			state = "WalkForward";
+			break;
+		case 14:
+			state = "WalkBack";
+			break;
+		case 15:
+			state = "Run";
+			break;
+		case 16:
+			state = "BackDash";
+			break;
+		case 17:
+			state = "Turn";
+			break;
+		}
+		//GEngine->AddOnScreenDebugMessage ( -1 , 1.f , FColor::Red , FString::Printf ( TEXT ( "eCharacterState : %s " ) , *state) );
+
+	}
 }
 
 // Called to bind functionality to input
@@ -311,6 +433,44 @@ void AAICharacter::ExitCurrentState ( ECharacterStateInteraction state)
 	}
 	if( state == ECharacterStateInteraction::HitFalling )
 		ChangeState(stateIdle);
+}
+
+int8 AAICharacter::ChangeAttackMotionDependingOpponentState ( )
+{
+	check ( aOpponentPlayer );
+	int8 randomAttackIndex;
+	if ( aOpponentPlayer->eCharacterState == ECharacterStateInteraction::Air )
+	{
+		//공중 상태일때 상단공격
+		randomAttackIndex = 1;
+	}
+	else if (aOpponentPlayer->eCharacterState == ECharacterStateInteraction::Sit )
+	{
+		//앉은 상태일때 중단 혹은 하단 공격
+		randomAttackIndex = (int8)blackboardComp->GetValueAsEnum ( TEXT ( "ERandomAttack" ) );
+		if( randomAttackIndex == 1 )
+			randomAttackIndex = FMath::RandRange ( 2 , 3 );
+	}
+	else
+	{
+		//이전에 랜덤으로 선택된 공격
+		randomAttackIndex= (int8)blackboardComp->GetValueAsEnum ( TEXT ( "ERandomAttack" ) );
+		//스탠드 상태일때 랜덤 공격
+		//randomAttackIndex = FMath::RandRange ( 1 , 3 );
+	}
+
+	return randomAttackIndex;
+}
+
+float AAICharacter::GetBTWDistance ( )
+{
+	if ( nullptr == aOpponentPlayer )
+		return 0;
+	if ( nullptr == GetMesh ( ) )
+		return 0;
+	float distanceBTW = FVector::Dist ( aOpponentPlayer->GetMesh ( )->GetBoneLocation ( (TEXT ( "head" )) ) , GetMesh ( )->GetBoneLocation ( (TEXT ( "head" )) ) );
+	distanceBTW -= 80;
+	return distanceBTW;
 }
 
 void AAICharacter::SetStateIdle ( )
@@ -412,6 +572,7 @@ void AAICharacter::OffAttackCollisionRH ( )
 {
 	collisionRH->SetCollisionEnabled ( ECollisionEnabled::NoCollision );
 	currentState->AddAttackCount(1);
+	//GEngine->AddOnScreenDebugMessage ( -1 , 1.f , FColor::Red , FString::Printf ( TEXT ( "OffAttackCollisionRH : %f " ) , FVector::Dist(GetMesh()->GetBoneLocation ((TEXT("head"))), collisionRH->GetComponentLocation())));
 	IsAttacked = false;
 }
 
@@ -431,9 +592,14 @@ void AAICharacter::OnCollisionLHBeginOverlap ( UPrimitiveComponent* OverlappedCo
 		return;
 	if (SweepResult.GetActor() == aOpponentPlayer)
 	{
+		//공격 결과 blackboardComp에 넣기 
+		blackboardComp->SetValueAsEnum ( TEXT ( "EAttackResult" ) , 0 ); //0 : hit - EAttackResult
+
 		FAttackInfoInteraction hitInfo = SendAttackInfo ( );
 		hitInfo.skellEffectLocation = collisionLH->GetComponentLocation();
-		aOpponentPlayer->HitDecision( hitInfo ,this);
+		//공격 결과 blackboardComp에 넣기 
+		blackboardComp->SetValueAsEnum ( TEXT ( "EAttackResult" ) , aOpponentPlayer->HitDecision ( hitInfo , this ) ); //0 : hit - EAttackResult
+
 		//DrawDebugSphere ( GetWorld ( ) , collisionLH->GetComponentLocation ( ) , 20 , 26 , FColor ( 181 , 0 , 0 ) , true , 0.5f , 0 , 0.5f );
 		IsAttacked = true;
 	}
@@ -447,9 +613,11 @@ void AAICharacter::OnCollisionRHBeginOverlap ( UPrimitiveComponent* OverlappedCo
 		return;
 	if ( SweepResult.GetActor ( ) == aOpponentPlayer )
 	{
+		
 		FAttackInfoInteraction hitInfo = SendAttackInfo ( );
 		hitInfo.skellEffectLocation = collisionRH->GetComponentLocation ( );
-		aOpponentPlayer->HitDecision ( hitInfo , this );
+		//공격 결과 blackboardComp에 넣기 
+		blackboardComp->SetValueAsEnum ( TEXT ( "EAttackResult" ) , aOpponentPlayer->HitDecision ( hitInfo , this ) ); //0 : hit - EAttackResult
 		//DrawDebugSphere ( GetWorld ( ) , collisionLH->GetComponentLocation ( ) , 20 , 26 , FColor ( 181 , 0 , 0 ) , true , 0.5f , 0 , 0.5f );
 		IsAttacked = true;
 	}
@@ -467,9 +635,14 @@ void AAICharacter::OnCollisionRFBeginOverlap ( UPrimitiveComponent* OverlappedCo
 		return;
 	if ( SweepResult.GetActor ( ) == aOpponentPlayer )
 	{
+		//공격 결과 blackboardComp에 넣기 
+		blackboardComp->SetValueAsEnum ( TEXT ( "EAttackResult" ) , 0 ); //0 : hit - EAttackResult
+
 		FAttackInfoInteraction hitInfo = SendAttackInfo ( );
 		hitInfo.skellEffectLocation = collisionRF->GetComponentLocation ( );
-		aOpponentPlayer->HitDecision ( hitInfo , this );
+		//공격 결과 blackboardComp에 넣기 
+		blackboardComp->SetValueAsEnum ( TEXT ( "EAttackResult" ) , aOpponentPlayer->HitDecision ( hitInfo , this ) ); //0 : hit - EAttackResult
+
 		//DrawDebugSphere ( GetWorld ( ) , collisionLH->GetComponentLocation ( ) , 20 , 26 , FColor ( 181 , 0 , 0 ) , true , 0.5f , 0 , 0.5f );
 		IsAttacked = true;
 	}
@@ -481,9 +654,14 @@ void AAICharacter::OnCollisionLFBeginOverlap ( UPrimitiveComponent* OverlappedCo
 		return;
 	if ( SweepResult.GetActor ( ) == aOpponentPlayer )
 	{
+		//공격 결과 blackboardComp에 넣기 
+		blackboardComp->SetValueAsEnum ( TEXT ( "EAttackResult" ) , 0 ); //0 : hit - EAttackResult
+
 		FAttackInfoInteraction hitInfo = SendAttackInfo ( );
 		hitInfo.skellEffectLocation = collisionLF->GetComponentLocation ( );
-		aOpponentPlayer->HitDecision ( hitInfo , this );
+		//공격 결과 blackboardComp에 넣기 
+		blackboardComp->SetValueAsEnum ( TEXT ( "EAttackResult" ) , aOpponentPlayer->HitDecision ( hitInfo , this ) ); //0 : hit - EAttackResult
+
 		//DrawDebugSphere ( GetWorld ( ) , collisionLH->GetComponentLocation ( ) , 20 , 26 , FColor ( 181 , 0 , 0 ) , true , 0.5f , 0 , 0.5f );
 		IsAttacked = true;
 	}
@@ -545,7 +723,7 @@ bool AAICharacter::HitDecision ( FAttackInfoInteraction attackInfo , ACPP_Tekken
 		if( gameMode )
 			gameMode->UpdatePlayerHP(this,Hp);
 		// 확대할 위치 , 줌 정도 0.5 기본 , 흔들림정도 , 흔들림 시간
-		//aMainCamera->RequestZoomEffect ( GetActorLocation ( ) , 10.0f , 10.0f , 0.3f );
+		aMainCamera->RequestZoomEffect ( GetActorLocation ( ) , 0.5f , 10.0f , 0.3f );
 
 		ExitCurrentState ( ECharacterStateInteraction::HitGround );
 		if ( attackInfo.KnockBackDirection.Z > 0 || currentState == stateBound || currentState == stateHitFalling )
@@ -595,7 +773,16 @@ void AAICharacter::CurrentAttackCountToZero ( )
 	currentState->AddAttackCount(-1*currentState->GetAttackCount());
 }
 
-void AAICharacter::LookTarget (const float& deltaTime , FRotator& rotator )
+void AAICharacter::LookTarget (const float& deltaTime)
 {
-	SetActorRotation ( FMath::RInterpConstantTo ( GetActorRotation ( ) , rotator , deltaTime , 200.0f ) );
+	if(nullptr==aOpponentPlayer)
+		return;
+	FVector opponentPlayerRotator = aOpponentPlayer->GetMesh()->GetBoneLocation((TEXT("head")));
+	opponentPlayerRotator.Z = GetActorLocation ( ).Z;
+	FRotator lookRotator = (opponentPlayerRotator - GetActorLocation ( )).Rotation ( );
+	SetActorRotation ( FMath::RInterpTo ( GetActorRotation ( ) , lookRotator , deltaTime , 20.0f ) );
+}
+void AAICharacter::LookTarget ( const float& deltaTime , FRotator lookRotator)
+{
+	SetActorRotation ( FMath::RInterpTo ( GetActorRotation ( ) , lookRotator , deltaTime , 20.0f ) );
 }

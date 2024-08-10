@@ -14,6 +14,8 @@ UCLASS()
 class LSJ_API UAICharacterAnimInstance : public UAnimInstance
 {
 	GENERATED_BODY()
+				UPROPERTY(EditAnyWhere , BlueprintReadOnly, Category = Move, Meta = (AllowPrivateAccess = true))
+	UAnimMontage* attackLowerLFMontage;
 			UPROPERTY(EditAnyWhere , BlueprintReadOnly, Category = Move, Meta = (AllowPrivateAccess = true))
 	UAnimMontage* crossWalkClockwiseMontage;
 				UPROPERTY(EditAnyWhere , BlueprintReadOnly, Category = Move, Meta = (AllowPrivateAccess = true))
@@ -28,6 +30,8 @@ class LSJ_API UAICharacterAnimInstance : public UAnimInstance
 	UAnimMontage* idleMontage;
 		UPROPERTY(EditAnyWhere , BlueprintReadOnly, Category = Move, Meta = (AllowPrivateAccess = true))
 	UAnimMontage* attackRHMontage;
+			UPROPERTY(EditAnyWhere , BlueprintReadOnly, Category = Move, Meta = (AllowPrivateAccess = true))
+	UAnimMontage* attackLHMontage;
 	UPROPERTY(EditAnyWhere , BlueprintReadOnly, Category = Move, Meta = (AllowPrivateAccess = true))
 	UAnimMontage* attackLFMontage;
 	UPROPERTY(EditAnyWhere , BlueprintReadOnly, Category = Move, Meta = (AllowPrivateAccess = true))
@@ -71,6 +75,8 @@ public:
 	bool bIsInAir;
 		UPROPERTY(VisibleAnywhere, BlueprintReadWrite )
 	float velocityZ;
+			UPROPERTY(VisibleAnywhere, BlueprintReadWrite )
+	bool bRun;
 	 // Animation Montage가 끝났을 때 호출될 함수
     UFUNCTION()
     virtual void HandleOnMontageEnded(class UAnimMontage* Montage, bool bInterrupted);
@@ -87,7 +93,9 @@ public:
 	virtual void PlayerWalkBackMontage();
 	virtual void PlayerBackDashMontage();
 	virtual void PlayeAttackRHMontage ( );
+	virtual void PlayeAttackLHMontage ( );
 	virtual void PlayeAttackLFMontage ( );
+	virtual void PlayeAttackLowerLFMontage ( );
 	virtual void PlayerIdleMontage( );
 	virtual bool StateWalkForward ( ) const { return bStateWalkForward; }
 	virtual void StateWalkForward ( bool val ) { bStateWalkForward = val; }
@@ -106,6 +114,7 @@ public:
 	UFUNCTION ( )
 	void AnimNotify_Laser ( );
 
+	float GetCurrentMontageTime ( );
 	//laser effect
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Default")
 	class UNiagaraSystem* laserFXSystem;

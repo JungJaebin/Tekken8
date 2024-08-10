@@ -9,6 +9,7 @@
 /**
  * 
  */
+
 UCLASS()
 class JMH_API UinGameUI : public UUserWidget
 {
@@ -45,6 +46,12 @@ public:
 	UFUNCTION()
 	void HideGameOver();
 	
+	UFUNCTION()
+	void ShowTextVisibility(const FString& TextName);
+
+	UFUNCTION()
+	void HideTextVisibility(const FString& TextName);
+	
 	UPROPERTY(EditAnywhere,meta=(BindWidget),Category="MySettings")
 	class UTextBlock* text_Round;
 
@@ -54,17 +61,23 @@ public:
 	UPROPERTY(EditAnywhere,meta=(BindWidget),Category="MySettings")
 	class UCanvasPanel* can_GameOver;
 
+	UPROPERTY(EditAnywhere,meta=(BindWidget),Category="MySettings")
+	class UCanvasPanel* can_Ready;
 	
-	
-	/*
-	
-	if(gameMode)
-	{
-		FString ValueAsString = FString::Printf(TEXT("%.0f") , gameMode->gameTimer);
-		text_Timer->SetText(FText::FromString(ValueAsString));
-	}
-*/
+	UPROPERTY(EditAnywhere,meta=(BindWidget),Category="MySettings")
+	class UCanvasPanel* can_Fight;
 
+	UPROPERTY(EditAnywhere,meta=(BindWidget),Category="MySettings")
+	class UCanvasPanel* can_FinalRound;
+
+	UPROPERTY(EditAnywhere,meta=(BindWidget),Category="MySettings")
+	class UCanvasPanel* can_TimeUp;
+
+	UPROPERTY(EditAnywhere,meta=(BindWidget),Category="MySettings")
+	class UCanvasPanel* can_YouWin;
+	
+	UPROPERTY(EditAnywhere,meta=(BindWidget),Category="MySettings")
+	class UCanvasPanel* can_YouLose;
 	
 	
 };

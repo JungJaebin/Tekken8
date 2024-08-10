@@ -6,6 +6,11 @@
 #include "AIStateComponent.h"
 #include "AIStateAttackRH.generated.h"
 
+enum class AttackRHInfo
+{
+	//중단 공격
+	attackMiddle,
+};
 /**
  * 
  */
@@ -13,11 +18,15 @@ UCLASS()
 class LSJ_API UAIStateAttackRH : public UAIStateComponent
 {
 	GENERATED_BODY()
-	class AAICharacter* aiCharacter;
+
+	float startFrame;
+	float endFrame;
+	float totalTime;
+	FVector startLocation;
+	bool btest;
 public:
 	virtual void Enter ( class UAICharacterAnimInstance* pAnimInstance ) override;
 	virtual void Execute ( const float& deltatime ) override;
 	virtual void Exit ( ) override;
-
 };
 

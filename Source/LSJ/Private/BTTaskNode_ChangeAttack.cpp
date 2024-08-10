@@ -7,6 +7,8 @@
 #include "AIStateAttackLF.h"
 #include "AIStateAttackRH.h"
 #include "AIStateComboLaserAttack.h"
+#include "AIStateAttackLH.h"
+#include "BehaviorTree/BlackboardComponent.h"
 UBTTaskNode_ChangeAttack::UBTTaskNode_ChangeAttack ( )
 {
 
@@ -19,27 +21,49 @@ EBTNodeResult::Type UBTTaskNode_ChangeAttack::ExecuteTask ( UBehaviorTreeCompone
 	AAIController* aiController = OwnerComp.GetAIOwner ( );
 	if ( aiController )
 	{
-		AAICharacter* Enemy = Cast<AAICharacter> ( aiController->GetPawn ( ) );
-		if ( Enemy )
+		owner = Cast<AAICharacter> ( aiController->GetPawn ( ) );
+		if ( owner )
 		{
+			int8 attackIndex = owner->GetBlackboardComponent ( )->GetValueAsEnum ( TEXT ( "ERandomAttack" ));
 			UAIStateComponent* stateComponent = nullptr;
 
 			// 적절한 상태 클래스에 따라 상태 변경
-			if ( newStateClass == UAIStateAttackLF::StaticClass ( ) )
+			//attackIndex=3 : Lower, =2 : Middle, =1 : Top
+			if ( attackIndex==3 || newStateClass == UAIStateAttackLF::StaticClass ( ) )
 			{
-				stateComponent = Enemy->GetAIStateAttackLF ( );
+				stateComponent = owner->GetAIStateAttackLF ( );
 			}
-			else if ( newStateClass == UAIStateAttackRH::StaticClass ( ) )
+			else if ( attackIndex == 2 || newStateClass == UAIStateAttackRH::StaticClass ( ) )
 			{
-				stateComponent = Enemy->GetAIStateAttackRH ( );
+				stateComponent = owner->GetAIStateAttackRH ( );
 			}
 			else if ( newStateClass == UAIStateComboLaserAttack::StaticClass ( ) )
 			{
-				stateComponent = Enemy->StateComboLaserAttack ( );
+				stateComponent = owner->StateComboLaserAttack ( );
+			}
+			else if ( attackIndex == 1 || newStateClass == UAIStateAttackLH::StaticClass ( ) )
+			{
+				stateComponent = owner->GetAIStateAttackLH();
 			}
 
 			if ( stateComponent )
 			{
+				stateComponent->attackPoint = attackPoint;
+				//랜덤 공격 일때 
+				switch ( attackIndex )
+				{
+				case 1: //상단
+					stateComponent->attackPoint = EAttackPoint::Top;
+					break;
+				case 2: //중단
+					stateComponent->attackPoint = EAttackPoint::Middle;
+					break;
+				case 3: //하단
+					stateComponent->attackPoint = EAttackPoint::Lower;
+					break;
+				default:
+					break;
+				}
 				// 상태 완료시 호출될 델리게이트 바인딩
 				if ( UAIStateAttackLF* stateAttackLF = Cast<UAIStateAttackLF> ( stateComponent ) )
 				{
@@ -56,10 +80,15 @@ EBTNodeResult::Type UBTTaskNode_ChangeAttack::ExecuteTask ( UBehaviorTreeCompone
 					if ( !stateComboLaserAttack->OnStateComplete.IsAlreadyBound ( this , &UBTTaskNode_ChangeAttack::OnStateCompleted ) )
 						stateComboLaserAttack->OnStateComplete.AddDynamic ( this , &UBTTaskNode_ChangeAttack::OnStateCompleted );
 				}
+				else if ( UAIStateAttackLH* stateAttackLH = Cast<UAIStateAttackLH> ( stateComponent ) )
+				{
+					if ( !stateAttackLH->OnStateComplete.IsAlreadyBound ( this , &UBTTaskNode_ChangeAttack::OnStateCompleted ) )
+						stateAttackLH->OnStateComplete.AddDynamic ( this , &UBTTaskNode_ChangeAttack::OnStateCompleted );
+				}
 
 				bIsWaitingForState = true;
 				cachedOwnerComp = &OwnerComp;
-				Enemy->ChangeState ( Cast<IAIStateInterface> ( stateComponent ) );
+				owner->ChangeState ( Cast<IAIStateInterface> ( stateComponent ) );
 				return EBTNodeResult::InProgress;
 			}
 		}
@@ -72,9 +101,10 @@ void UBTTaskNode_ChangeAttack::TickTask ( UBehaviorTreeComponent& OwnerComp , ui
 {
 	Super::TickTask ( OwnerComp , NodeMemory , DeltaSeconds );
 
-	// 상태 완료 대기 중일 때는 Tick을 계속 호출
+	// 상태 완료
 	if ( !bIsWaitingForState )
 	{
+		owner->GetBlackboardComponent ( )->SetValueAsEnum ( TEXT ( "ERandomAttack" ) , 0);
 		FinishLatentTask ( OwnerComp , EBTNodeResult::Succeeded );
 	}
 }

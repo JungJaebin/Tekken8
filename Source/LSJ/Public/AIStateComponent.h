@@ -7,8 +7,10 @@
 #include "AIStateInterface.h"
 #include "AIStateComponent.generated.h"
 
-
 DECLARE_DYNAMIC_MULTICAST_DELEGATE ( FOnStateWalkForwardComplete );
+
+
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class LSJ_API UAIStateComponent : public UActorComponent , public IAIStateInterface
 {
@@ -22,8 +24,9 @@ protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 	class AAICharacter* owner;
-
+	FRotator toLookTargetRotator;
 public:	
+
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	virtual void AddAttackCount ( int32 amount );
@@ -32,7 +35,7 @@ public:
 	virtual void Execute ( const float& deltatime );
 	virtual void Exit ( );
 	virtual void SetStateOwner (class AAICharacter* pOwner);
-
+	virtual void ToLookTargetRotate( const float& deltaTime );
 		UPROPERTY(BlueprintAssignable)
     FOnStateWalkForwardComplete OnStateComplete;
 };

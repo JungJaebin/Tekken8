@@ -208,9 +208,12 @@ public:
 	void EnablePlayerInput();
 
 	UPROPERTY()
-	class APlayerController* playerAController;
-UPROPERTY()
-	class APlayerController* playerBController;
+	APlayerController* PlayerAController;
+	UPROPERTY()
+	AController* PlayerBController;
+	//class AController* inputplayerController;
+    //UPROPERTY()
+	//class AController* playerBController;
 
 	
 	//Camera
@@ -220,8 +223,9 @@ UPROPERTY()
 	UFUNCTION(BlueprintCallable, Category = "Game")
 	void UpdatePlayerHP(ACPP_Tekken8CharacterParent* Player,float NewHP);
 
+	//inGameUi text visible 설정
 	UFUNCTION(BlueprintCallable, Category = "Game")
-	float SetShakeIntensity(float Damage);
+	void UpdateTextVisibility(const FString& TextName, bool bVisible);
 
 	//플레이어 초기위치 저장
 	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite)
