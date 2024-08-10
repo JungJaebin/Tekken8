@@ -14,7 +14,7 @@ UCLASS()
 class LSJ_API UBTTaskNode_ChangeAttack : public UBTTaskNode
 {
 	GENERATED_BODY()
-	
+	class AAICharacter* owner;
 public:
 	UBTTaskNode_ChangeAttack ( );
 

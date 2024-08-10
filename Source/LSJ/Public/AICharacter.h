@@ -98,7 +98,10 @@ public:
 	void ChangeState (class IAIStateInterface* NewState );
 	void UpdateState ( const float& deltatime );
 	void ExitCurrentState (ECharacterStateInteraction state );
-
+	//플레이어가 앉은 상태인지 공중상태인지를 판단하여 공격 모션이 달라진다. - AICharacter.cpp
+	int8 ChangeAttackMotionDependingOpponentState ( );
+	//상대 플레이어와의 거리
+	float GetBTWDistance ( );
 	// 상태 이동 객체에 대한 접근 메서드 추가
 	void SetStateIdle();
 	UAIStateWalkCross* GetAIStateWalkCross ( ) const { return stateWalkCross; }

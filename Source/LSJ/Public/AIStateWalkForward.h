@@ -21,6 +21,9 @@ class LSJ_API UAIStateWalkForward : public UAIStateComponent
 	FVector direction;
 	float startFrame;
 	float endFrame;
+
+	float attackRange;
+	bool isOneMore;
 public:
 	void SetDistance ( float pDistance );
 	UPROPERTY(EditAnywhere, Category = "AI")

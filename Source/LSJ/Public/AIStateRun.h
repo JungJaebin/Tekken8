@@ -14,6 +14,7 @@ class LSJ_API UAIStateRun : public UAIStateComponent
 {
 	GENERATED_BODY()
 	float moveSpeed = 200.0f;
+	float attackRange;
 public:
 	void SetDistance ( float pDistance );
 	UPROPERTY(EditAnywhere, Category = "AI")

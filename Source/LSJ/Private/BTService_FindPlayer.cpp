@@ -17,5 +17,7 @@ void UBTService_FindPlayer::TickNode ( UBehaviorTreeComponent& OwnerComp , uint8
 	AAICharacter* owner = Cast<AAICharacter>(OwnerComp.GetAIOwner()->GetPawn());
 	if(nullptr==owner)
 		return;
+	if ( nullptr == owner->aOpponentPlayer )
+		return;
 	OwnerComp.GetBlackboardComponent ( )->SetValueAsObject ( TEXT("Player") , owner->aOpponentPlayer);
 }
