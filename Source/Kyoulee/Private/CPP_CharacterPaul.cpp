@@ -955,7 +955,7 @@ void ACPP_CharacterPaul::CommandLeadJab ( )
 
 	this->eCharacterState = ECharacterStateInteraction::AttackTop;
 
-	SetActtacInfoSkell ( EDamagePointInteraction::Top , 5 , 10 , 20 , 0 , 8 , 1 , 8 );
+	SetActtacInfoSkell ( EDamagePointInteraction::Top , 5 , 10 , 6 , 0 , 8 , 1 , 8 );
 
 	sAttackInfo.skellEffectLocation = this->RelativePointVector ( 90 , 5 , 50 ) + this->GetActorLocation();
 	sAttackInfo.KnockBackDirection = this->RelativePointVector ( 200 , 0 , 0 );
@@ -985,7 +985,7 @@ void ACPP_CharacterPaul::CommandCrossStaight ( )
 
 	this->eCharacterState = ECharacterStateInteraction::AttackTop;
 
-	SetActtacInfoSkell ( EDamagePointInteraction::Top , 5 , 10 , 20 , 0 , 6 , 0 , 6 );
+	SetActtacInfoSkell ( EDamagePointInteraction::Top , 5 , 10 , 8 , 0 , 6 , 0 , 6 );
 
 	sAttackInfo.skellEffectLocation = this->RelativePointVector ( 90 , -5 , 60 ) + this->GetActorLocation ( );
 	sAttackInfo.KnockBackDirection = this->RelativePointVector ( 160 , 0 , 0 );
@@ -1014,7 +1014,7 @@ void ACPP_CharacterPaul::CommandJingun ( )
 
 	this->eCharacterState = ECharacterStateInteraction::AttackMiddle;
 
-	SetActtacInfoSkell ( EDamagePointInteraction::Middle , 14 , 15 , 20 , 0 , -1 , -12 , -1 );
+	SetActtacInfoSkell ( EDamagePointInteraction::Middle , 14 , 15 , 10 , 0 , -1 , -12 , -1 );
 
 	sAttackInfo.skellEffectLocation = this->RelativePointVector ( 100 , 5 , 00 ) + this->GetActorLocation ( );
 	sAttackInfo.KnockBackDirection = this->RelativePointVector ( 150 , 0 , 0 );
@@ -1041,7 +1041,7 @@ void ACPP_CharacterPaul::CommandHighKick ( )
 
 	this->eCharacterState = ECharacterStateInteraction::AttackTop;
 
-	SetActtacInfoSkell ( EDamagePointInteraction::Top , 17 , 12 , 20 , 0 , 14 , 4 , 57 );
+	SetActtacInfoSkell ( EDamagePointInteraction::Top , 17 , 12 , 10 , 0 , 14 , 4 , 57 );
 
 	sAttackInfo.skellEffectLocation = this->RelativePointVector ( 120 , -5 , 60 ) + this->GetActorLocation ( );
 	sAttackInfo.KnockBackDirection = this->RelativePointVector ( 150 , 0 , 0 );
@@ -1209,7 +1209,6 @@ bool ACPP_CharacterPaul::HitDecision ( FAttackInfoInteraction attackInfoHit , AC
 		this->sFrameStatus.FrameBlockUsing = attackInfoHit.OppositeGuardFrame;
 		// this->SetToWorldLocationPoint ( (attackInfoHit.KnockBackDirection - this->GetActorLocation ( )) / 2 + this->GetActorLocation ( ));
 		this->SetToLocationFrame ( attackInfoHit.KnockBackDirection, 10 );
-		LaunchCharacter( FVector(0,0,300), true, true );
 
 		//LaunchCharacter( (attackInfoHit.KnockBackDirection - this->GetActorLocation ( )) * 2 , true, true );
 		// defense animation 추가하기
