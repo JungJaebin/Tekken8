@@ -4,7 +4,7 @@
 #include "AIStateIdle.h"
 #include "AICharacterAnimInstance.h"
 #include "AIStateComponent.h"
-
+#include "AICharacter.h"
 void UAIStateIdle::BeginPlay ( )
 {
 	Super::BeginPlay();
@@ -18,6 +18,7 @@ void UAIStateIdle::Enter ( UAICharacterAnimInstance* pAnimInstance )
 
 void UAIStateIdle::Execute ( const float& deltatime )
 {
+
 }
 
 void UAIStateIdle::Exit ( )

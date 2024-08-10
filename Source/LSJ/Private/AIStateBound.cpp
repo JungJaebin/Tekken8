@@ -55,6 +55,7 @@ void UAIStateBound::Execute ( const float& deltatime )
 
 void UAIStateBound::Exit ( )
 {
-	owner->ChangeState ( owner->GetAIStateIdle () );
+	animInstace->bKnockDown = true;
+	owner->GetBlackboardComponent ( )->SetValueAsBool ( TEXT ( "IsKnockDown" ) , true );
 	Super::Exit ( );
 }

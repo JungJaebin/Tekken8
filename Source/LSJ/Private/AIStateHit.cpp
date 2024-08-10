@@ -37,10 +37,17 @@ void UAIStateHit::Enter ( UAICharacterAnimInstance* pAnimInstance )
 
 	//공격 받는 애니메이션 추가
 	animInstace->StopAllMontages ( 0.1f );
-	if( attackInfoArray[0].DamagePoint == EDamagePointInteraction::Middle )
-		animInstace->PlayHitTopMontage ( );
+
+	if ( nullptr != attackInfoArray[0].hitMontage )
+		animInstace->PlayMontageAtFrameRate ( attackInfoArray[0].hitMontage , attackInfoArray[0].RetrieveFrame + attackInfoArray[0].OppositeHitFrame , 30.0f );
 	else
-		animInstace->PlayHitMiddleMontage();
+	{
+		if ( attackInfoArray[0].DamagePoint == EDamagePointInteraction::Top )
+			animInstace->PlayHitTopMontage ( attackInfoArray[0].RetrieveFrame + attackInfoArray[0].OppositeHitFrame , 30.0f );
+		else
+			animInstace->PlayHitMiddleMontage ( attackInfoArray[0].RetrieveFrame + attackInfoArray[0].OppositeHitFrame , 30.0f );
+	}
+
 
 
 }

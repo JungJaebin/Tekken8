@@ -9,6 +9,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "AIStateBound.h"
+#include "Components/BoxComponent.h"
 void UAIStateHitFalling::SetAttackInfo ( FAttackInfoInteraction& pAttackInfo )
 {
 	attackInfoArray.Empty ( );
@@ -21,8 +22,12 @@ void UAIStateHitFalling::SetAttackInfo ( FAttackInfoInteraction& pAttackInfo )
 void UAIStateHitFalling::Enter ( UAICharacterAnimInstance* pAnimInstance )
 {
 	Super::Enter ( pAnimInstance );
+	//owner->collisionLower->SetCollisionEnabled ( ECollisionEnabled::NoCollision );
 
-	owner->GetBlackboardComponent ( )->SetValueAsBool ( TEXT ( "IsHitFalling" ) , false ); // 원하는 값을 설정
+
+	animInstace->bKnockDown = false;
+	owner->GetBlackboardComponent ( )->SetValueAsBool ( TEXT ( "IsKockDown" ) , false );
+	owner->GetBlackboardComponent ( )->SetValueAsBool ( TEXT ( "IsHitFalling" ) , false );
 	{
 		FVector Direction = owner->GetActorLocation ( ) - owner->aOpponentPlayer->GetActorLocation ( )+ owner->aOpponentPlayer->GetActorForwardVector()*-10000.f;
 		Direction.Z = 0.0f; // 수평 방향으로만 계산 (필요 시)
@@ -40,7 +45,7 @@ void UAIStateHitFalling::Enter ( UAICharacterAnimInstance* pAnimInstance )
 	}
 	//공격 받는 애니메이션 추가
 	animInstace->StopAllMontages ( 0.1f );
-	animInstace->PlayHitFallingTurnMontage ( );
+	animInstace->PlayHitFallingTurnMontage ( attackInfoArray[0].RetrieveFrame + attackInfoArray[0].OppositeHitFrame , 30.0f);
 
 		//owner->GetCharacterMovement ( )->AddImpulse ( attackInfoArray[0].KnockBackDirection * 100.0f , true );
 		//owner->LaunchCharacter ( attackInfoArray[0].KnockBackDirection , true , true );
@@ -51,16 +56,23 @@ void UAIStateHitFalling::Execute ( const float& deltatime )
 	currnetLocationZ = owner->GetMesh ( )->GetSocketLocation ( TEXT ( "root" ) ).Z;
 	if( maxLocationZ < currnetLocationZ )
 		maxLocationZ = currnetLocationZ;
-	if ( false == owner->GetCharacterMovement ( )->IsFalling ( ) && maxLocationZ - minLocationZ > 10.f )
+	if ( false == owner->GetCharacterMovement ( )->IsFalling ( ) && maxLocationZ - minLocationZ > 10.f)
 	{
-		owner->GetBlackboardComponent ( )->SetValueAsBool ( TEXT ( "IsBound" ) , true );
-		owner->GetAIStateBound()->SetAttackInfo(attackInfoArray[0]);
 		Exit();
 	}
-		
 }
 
 void UAIStateHitFalling::Exit ( )
 {
+	if ( maxLocationZ - minLocationZ > 10.f )
+	{
+		owner->GetBlackboardComponent ( )->SetValueAsBool ( TEXT ( "IsBound" ) , true );
+		owner->GetAIStateBound ( )->SetAttackInfo ( attackInfoArray[0] );
+	}
+	else
+	{
+		animInstace->bKnockDown = true;
+		owner->GetBlackboardComponent ( )->SetValueAsBool ( TEXT ( "IsKnockDown" ) , true );
+	}
 	Super::Exit ( );
 }

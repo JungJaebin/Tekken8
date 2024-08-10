@@ -26,6 +26,7 @@
 #include "../Plugins/FX/Niagara/Source/Niagara/Public/NiagaraFunctionLibrary.h"
 #include "AIStateWalkCross.h"
 #include "AIStateAttackLH.h"
+#include "AIStateKnockDown.h"
 
 
 // Sets default values
@@ -44,7 +45,7 @@ AAICharacter::AAICharacter()
 		GetMesh ( )->SetAnimInstanceClass ( animFinder.Class );
 	}
 	GetMesh ( )->SetRelativeScale3D ( FVector ( 0.1f , 0.1f , 0.1f ) );
-	GetMesh( )->SetRelativeLocation(FVector(0,0,-90.f));
+	GetMesh( )->SetRelativeLocation(FVector( -20.0 ,0,-90.f));
 	GetMesh ( )->SetRelativeRotation ( FRotator (  0, -90.f , 0 ) );
 
 	collisionLH = CreateDefaultSubobject<USphereComponent> ( TEXT ( "collisionLH" ) );
@@ -65,16 +66,20 @@ AAICharacter::AAICharacter()
 	collisionRF->SetCollisionEnabled ( ECollisionEnabled::NoCollision );
 
 	//몸체 콜리전
-	//collisionTop = CreateDefaultSubobject<UBoxComponent> ( TEXT ( "collisionTop" ) );
-	//collisionMiddle = CreateDefaultSubobject<UBoxComponent> ( TEXT ( "collisionMiddle" ) );
-	//collisionLower = CreateDefaultSubobject<UBoxComponent> ( TEXT ( "collisionLower" ) );
-	//collisionTop->SetupAttachment ( GetMesh ( ) , TEXT ( "head" ) );
-	//collisionTop->SetBoxExtent ( FVector (311.232643 ,166.634513 , 240.066655) );
-	//collisionMiddle->SetupAttachment ( GetMesh ( ) , TEXT ( "spine_01" ) );
-	//collisionMiddle->SetBoxExtent ( (FVector ( 311.232643 ,  315.176916 ,  240.066655)) );
-	//collisionLower->SetupAttachment ( GetMesh ( ) , TEXT ( "root" ) );
-	//collisionLower->SetBoxExtent ( FVector (311.232643 , 404.006705 ,  330.919514) );
-	//collisionLower->SetRelativeLocation(FVector( 0.000000 ,199.999997 ,299.999996));
+	collisionTop = CreateDefaultSubobject<UBoxComponent> ( TEXT ( "collisionTop" ) );
+	collisionTop->SetupAttachment ( GetMesh ( ) , TEXT ( "head" ) );
+	collisionMiddle = CreateDefaultSubobject<UBoxComponent> ( TEXT ( "collisionMiddle" ) );
+	collisionMiddle->SetupAttachment ( GetMesh ( ) , TEXT ( "spine_01" ) );
+	collisionLower = CreateDefaultSubobject<UBoxComponent> ( TEXT ( "collisionLower" ) );
+	collisionLower->SetupAttachment ( GetMesh ( ) , TEXT ( "pelvis" ) );
+	collisionTop->SetBoxExtent ( FVector ( 311.232643 , 166.634513 , 240.066655 ) );
+	collisionMiddle->SetBoxExtent ( (FVector ( 311.232643 , 315.176916 , 264.956523 )) );
+	collisionMiddle->SetUsingAbsoluteRotation ( true );
+	collisionMiddle->SetRelativeLocation ( FVector ( 0,0 , 99.999999 ) );
+	collisionLower->SetBoxExtent ( FVector ( 319.717793 , 321.694333 ,336.888169 ) );
+	collisionLower->SetUsingAbsoluteRotation ( true );
+	collisionLower->SetRelativeLocation ( FVector ( 0.092165 , 531.000000 , 117.000000 ) );
+
 	//콜리전 설정
 	//플레이어랑만 충돌
 
@@ -104,6 +109,8 @@ AAICharacter::AAICharacter()
 	stateComboLaserAttack->SetStateOwner ( this );
 	stateWalkCross = CreateDefaultSubobject<UAIStateWalkCross> ( TEXT ( "stateWalkCross" ) );
 	stateWalkCross->SetStateOwner ( this );
+	stateKnockDown = CreateDefaultSubobject<UAIStateKnockDown> ( TEXT ( "stateKnockDown" ) );
+	stateKnockDown->SetStateOwner ( this );
 	//콤보 공격 정보
 	FAttackInfoInteraction attack1;
 	attack1.KnockBackDirection = FVector (250.f,0.f,0.f); //-0.5 뒤로 밀려난다 5*50 = 250.0f
@@ -227,7 +234,7 @@ AAICharacter::AAICharacter()
 
 	//내가 손해면 - 상대가 손해면 +
 	FAttackInfoInteraction attackLowerLF;
-	attackLowerLF.KnockBackDirection = FVector ( 300.f , 0.f , 50.f ); //-0.5 보다 적게 예상 3*
+	attackLowerLF.KnockBackDirection = FVector ( 100.f , 0.f , 0.f ); //-0.5 보다 적게 예상 3*
 	attackLowerLF.DamageAmount = 7;
 	attackLowerLF.DamagePoint = EDamagePointInteraction::Lower;
 	attackLowerLF.HitFrame = 12; //HitFrame
@@ -275,14 +282,17 @@ void AAICharacter::BeginPlay()
 	animInstance = Cast<UAICharacterAnimInstance> (GetMesh()->GetAnimInstance());
 	if ( animInstance )
 	{
-		
+		if(stateAttackLF->attackInfoArray.IsValidIndex ( 0 ))
+			stateAttackLF->attackInfoArray[0].hitMontage=animInstance->hitLowerRFMontage;
 		//animInstance->OnMontageEnded.AddDynamic ( this , &AAICharacter::HandleOnMontageEnded );
 	}
 	
-	if ( IsPlayer1 )
-		GetCapsuleComponent ( )->SetCollisionProfileName ( FName ( TEXT ( "Player1Capsule" ) ) );
-	else
-		GetCapsuleComponent ( )->SetCollisionProfileName ( FName ( TEXT ( "Player2Capsule" ) ) );
+	//콜리전
+	//if ( IsPlayer1 )
+	//	GetCapsuleComponent ( )->SetCollisionProfileName ( FName ( TEXT ( "Player1Capsule" ) ) );
+	//else
+	//	GetCapsuleComponent ( )->SetCollisionProfileName ( FName ( TEXT ( "Player2Capsule" ) ) );
+
 	//GetRootComponent()->SetCollisionName
 	//FTimerHandle handle;
 	//GetWorld ( )->GetTimerManager ( ).SetTimer ( handle ,FTimerDelegate::CreateLambda ([this]() {
@@ -431,8 +441,8 @@ void AAICharacter::ExitCurrentState ( ECharacterStateInteraction state)
 	if ( currentState ) {
 		currentState->Exit ( );
 	}
-	if( state == ECharacterStateInteraction::HitFalling )
-		ChangeState(stateIdle);
+	//if( state == ECharacterStateInteraction::HitFalling )
+		//ChangeState(stateIdle);
 }
 
 int8 AAICharacter::ChangeAttackMotionDependingOpponentState ( )
@@ -598,7 +608,7 @@ void AAICharacter::OnCollisionLHBeginOverlap ( UPrimitiveComponent* OverlappedCo
 		FAttackInfoInteraction hitInfo = SendAttackInfo ( );
 		hitInfo.skellEffectLocation = collisionLH->GetComponentLocation();
 		//공격 결과 blackboardComp에 넣기 
-		blackboardComp->SetValueAsEnum ( TEXT ( "EAttackResult" ) , aOpponentPlayer->HitDecision ( hitInfo , this ) ); //0 : hit - EAttackResult
+		blackboardComp->SetValueAsEnum ( TEXT ( "EAttackResult" ) , aOpponentPlayer->HitDecision ( hitInfo , this )?1:0 ); //0 : hit - EAttackResult
 
 		//DrawDebugSphere ( GetWorld ( ) , collisionLH->GetComponentLocation ( ) , 20 , 26 , FColor ( 181 , 0 , 0 ) , true , 0.5f , 0 , 0.5f );
 		IsAttacked = true;
@@ -736,6 +746,11 @@ bool AAICharacter::HitDecision ( FAttackInfoInteraction attackInfo , ACPP_Tekken
 			stateBound->SetAttackInfo ( attackInfo );
 			blackboardComp->SetValueAsBool ( TEXT ( "IsBound" ) , true );
 		}*/
+		else if ( currentState == stateKnockDown)
+		{
+			stateKnockDown->SetAttackInfo ( attackInfo );
+			blackboardComp->SetValueAsBool ( TEXT ( "IsKnockDown" ) , true );
+		}
 		else
 		{
 			stateHit->SetAttackInfo ( attackInfo );

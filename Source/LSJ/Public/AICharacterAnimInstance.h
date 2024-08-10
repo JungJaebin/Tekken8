@@ -28,18 +28,15 @@ class LSJ_API UAICharacterAnimInstance : public UAnimInstance
 	UAnimMontage* walkBackMontage;
 	UPROPERTY(EditAnyWhere , BlueprintReadOnly, Category = Move, Meta = (AllowPrivateAccess = true))
 	UAnimMontage* idleMontage;
-		UPROPERTY(EditAnyWhere , BlueprintReadOnly, Category = Move, Meta = (AllowPrivateAccess = true))
+	UPROPERTY(EditAnyWhere , BlueprintReadOnly, Category = Move, Meta = (AllowPrivateAccess = true))
 	UAnimMontage* attackRHMontage;
-			UPROPERTY(EditAnyWhere , BlueprintReadOnly, Category = Move, Meta = (AllowPrivateAccess = true))
+	UPROPERTY(EditAnyWhere , BlueprintReadOnly, Category = Move, Meta = (AllowPrivateAccess = true))
 	UAnimMontage* attackLHMontage;
 	UPROPERTY(EditAnyWhere , BlueprintReadOnly, Category = Move, Meta = (AllowPrivateAccess = true))
 	UAnimMontage* attackLFMontage;
-	UPROPERTY(EditAnyWhere , BlueprintReadOnly, Category = Move, Meta = (AllowPrivateAccess = true))
-	UAnimMontage* hitTopMontage;
-	UPROPERTY(EditAnyWhere , BlueprintReadOnly, Category = Move, Meta = (AllowPrivateAccess = true))
-	UAnimMontage* hitMiddleMontage;
-	UPROPERTY(EditAnyWhere , BlueprintReadOnly, Category = Move, Meta = (AllowPrivateAccess = true))
-	UAnimMontage* hitFallingMontage;
+
+
+
 	UPROPERTY(EditAnyWhere , BlueprintReadOnly, Category = Move, Meta = (AllowPrivateAccess = true))
 	UAnimMontage* hitFallingTurnMontage;
 	UPROPERTY(EditAnyWhere , BlueprintReadOnly, Category = Move, Meta = (AllowPrivateAccess = true))
@@ -47,6 +44,8 @@ class LSJ_API UAICharacterAnimInstance : public UAnimInstance
 	//콤보 레이저 몽타주 
 	UPROPERTY(EditAnyWhere , BlueprintReadOnly, Category = Move, Meta = (AllowPrivateAccess = true))
 	UAnimMontage* comboLaserMontage;
+	UPROPERTY ( EditAnyWhere , BlueprintReadOnly , Category = Move , Meta = (AllowPrivateAccess = true) )
+	UAnimMontage* knockDownMontage;
 	UPROPERTY(EditAnyWhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class AAICharacter* owner;
 	UPROPERTY( EditAnyWhere , BlueprintReadOnly , Category = Move , Meta = (AllowPrivateAccess = true) )
@@ -64,6 +63,16 @@ protected:
 	virtual void NativeInitializeAnimation ( ) override;
 
 public:
+	virtual void PlayMontageAtFrameRate ( UAnimMontage* montage , int32 nFrames , float frameRate );
+	UPROPERTY ( EditAnyWhere , BlueprintReadOnly , Category = Move )
+	UAnimMontage* hitTopMontage;
+	UPROPERTY ( EditAnyWhere , BlueprintReadOnly , Category = Move )
+	UAnimMontage* hitMiddleMontage;
+	UPROPERTY ( EditAnyWhere , BlueprintReadOnly , Category = Move )
+	UAnimMontage* hitLowerRFMontage;
+	UPROPERTY ( EditAnyWhere , BlueprintReadOnly , Category = Move )
+	UAnimMontage* hitFallingMontage;
+
 	UAICharacterAnimInstance();
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	float movementSpeed;
@@ -73,22 +82,27 @@ public:
     
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite )
 	bool bIsInAir;
-		UPROPERTY(VisibleAnywhere, BlueprintReadWrite )
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite )
 	float velocityZ;
-			UPROPERTY(VisibleAnywhere, BlueprintReadWrite )
+		UPROPERTY(VisibleAnywhere, BlueprintReadWrite )
+	bool bFalling;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite )
 	bool bRun;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite )
+	bool bKnockDown;
 	 // Animation Montage가 끝났을 때 호출될 함수
     UFUNCTION()
     virtual void HandleOnMontageEnded(class UAnimMontage* Montage, bool bInterrupted);
 	virtual void PlayComboLaserMontage ( );
+	virtual void PlayKnockDownMontage ( );
 	virtual void PlayBoundMontage ( );
 
 	virtual void PlayCrossWalkClockwiseMontage ( );
 	virtual void PlayCrossWalkCounterclockwiseMontage ( );
-	virtual void PlayHitFallingMontage ( );
-	virtual void PlayHitFallingTurnMontage ( );
-	virtual void PlayHitTopMontage ( );
-	virtual void PlayHitMiddleMontage ( );
+	virtual void PlayHitFallingMontage (float nFrame, float frameRate);
+	virtual void PlayHitFallingTurnMontage ( float nFrame , float frameRate );
+	virtual void PlayHitTopMontage ( float nFrame , float frameRate );
+	virtual void PlayHitMiddleMontage ( float nFrame , float frameRate );
 	virtual void PlayerWalkForwardMontage();
 	virtual void PlayerWalkBackMontage();
 	virtual void PlayerBackDashMontage();
