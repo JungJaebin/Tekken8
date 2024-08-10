@@ -9,14 +9,16 @@ void UAIStateAttackLF::Enter ( UAICharacterAnimInstance* pAnimInstance )
 {
 	Super::Enter ( pAnimInstance );
 
+	startLocation = owner->GetMesh ( )->GetBoneLocation ( (TEXT ( "head" )) );
+	startLocation.Z = 0;
+
 	if(attackPoint==EAttackPoint::Lower)
 		animInstace->PlayeAttackLowerLFMontage ( );
 	else
 		animInstace->PlayeAttackLFMontage ( );
 
 	owner->GetCurrentMontage ( )->GetSectionStartAndEndTime ( 0 , startFrame , endFrame );
-	startLocation = owner->GetMesh ( )->GetBoneLocation ( (TEXT ( "head" )) );
-	startLocation.Z = 0;
+
 	TArray<const FAnimNotifyEvent*> notifyEvents;
 	//몽타지 노티파이의 끝나는 시간
 	owner->GetCurrentMontage ( )->GetAnimNotifies ( startFrame , endFrame , false , notifyEvents );
