@@ -282,13 +282,21 @@ void ACPP_CharacterPaul::AnimationFrame ( )
 	}
 }
 
-void ACPP_CharacterPaul::SetToLocationFrame ( FVector dir , int32 frame )
+void ACPP_CharacterPaul::SetToRelativeLocationFrame ( FVector dir , int32 frame )
 {
-	FVector relativeDir = RelativePointVector ( dir.X , dir.Y , dir.Z );
+	FVector relativeDir = RelativePointVector ( dir.X , dir.Y , dir.Z ) + this->GetActorLocation();
 	FVector	frameDir =  (relativeDir - this->GetActorLocation()) / frame;
 	this->ToLocationFrame.Empty();
 	for ( int32 i = 0 ; i < frame ; i++ )
 		this->ToLocationFrame.Add(frameDir);
+}
+
+void ACPP_CharacterPaul::SetToLocationFrame ( FVector dir , int32 frame )
+{
+	FVector	frameDir = dir / frame;
+	this->ToLocationFrame.Empty ( );
+	for ( int32 i = 0; i < frame; i++ )
+		this->ToLocationFrame.Add ( frameDir );
 }
 
 void ACPP_CharacterPaul::SetToLocationPoint ( float x , float y , float z )
@@ -324,7 +332,7 @@ void ACPP_CharacterPaul::SetToWorldLocationPoint ( FVector vector )
 
 FVector ACPP_CharacterPaul::RelativePointVector ( float x , float y , float z )
 {
-	FVector relativePoint = this->GetActorLocation ( ) +
+	FVector relativePoint =
 		(
 			this->GetActorForwardVector ( ) * x +
 			this->GetActorRightVector ( ) * y +
@@ -775,7 +783,7 @@ void ACPP_CharacterPaul::CommandMoveForward ( )
 	eCharacterState = ECharacterStateInteraction::WalkForward;
 
 	// 애니메이션으로 바꾼다면?
-	this->SetToLocationFrame(FVector(0.5,0,0), 2);
+	this->SetToRelativeLocationFrame(FVector(0.5,0,0), 2);
 
 	this->CountStarFrame = 5;
 	this->sFrameStatus.FrameUsing = 1;
@@ -789,7 +797,7 @@ void ACPP_CharacterPaul::CommandMoveForwarDash ( )
 
 	eCharacterState = ECharacterStateInteraction::Run;
 
-	this->SetToLocationFrame ( FVector ( 20 , 0 , 0 ) , 2 );
+	this->SetToRelativeLocationFrame ( FVector ( 20 , 0 , 0 ) , 2 );
 	this->sFrameStatus.FrameUsing = 1;
 	this->iCurrFrame = 0;
 }
@@ -801,7 +809,7 @@ void ACPP_CharacterPaul::CommandMoveBack ( )
 
 	eCharacterState = ECharacterStateInteraction::GuardStand;
 
-	this->SetToLocationFrame ( FVector ( -0.5 , 0 , 0 ) , 2 );
+	this->SetToRelativeLocationFrame ( FVector ( -0.5 , 0 , 0 ) , 2 );
 	this->CountStarFrame = 5;
 	this->sFrameStatus.FrameUsing = 1;
 	this->iCurrFrame = 0;
@@ -814,7 +822,7 @@ void ACPP_CharacterPaul::CommandMoveBackDash ( )
 
 	eCharacterState = ECharacterStateInteraction::Move;
 
-	this->SetToLocationFrame ( FVector ( -500 , 0 , 0 ) , 15 );
+	this->SetToRelativeLocationFrame ( FVector ( -500 , 0 , 0 ) , 15 );
 	this->sFrameStatus.FrameUsing = 20;
 	this->iCurrFrame = 0;
 }
@@ -847,7 +855,7 @@ void ACPP_CharacterPaul::CommandMoveLateralUpDash ( )
 
 	this->sAttackInfo.ActionFrame = 1;
 
-	this->SetToLocationFrame (FVector( 300 , -500 , 0 ), 20);
+	this->SetToRelativeLocationFrame (FVector( 300 , -500 , 0 ), 20);
 
 	// 애니매이션 실행 부분 있으면 만들기
 	//PlayMontageFrameSystem ( uMtgMoveLateral );
@@ -868,7 +876,7 @@ void ACPP_CharacterPaul::CommandMoveLateralUpLoop( )
 	sAttackInfo.DamagePoint = EDamagePointInteraction::Special;
 	sAttackInfo.DamageAmount = 0;
 
-	this->SetToLocationFrame ( FVector ( 30 , -250 , 0 ) ,5 );
+	this->SetToRelativeLocationFrame ( FVector ( 30 , -250 , 0 ) ,5 );
 
 	// 애니매이션 실행 부분 없음
 
@@ -912,7 +920,7 @@ void ACPP_CharacterPaul::CommandMoveLateralDownDash ( )
 
 	this->sAttackInfo.ActionFrame = 1;
 
-	this->SetToLocationFrame ( FVector ( 300 , 500 , 0 ) , 20 );
+	this->SetToRelativeLocationFrame ( FVector ( 300 , 500 , 0 ) , 20 );
 
 	// 애니매이션 실행 부분 있으면 만들기
 	//PlayMontageFrameSystem ( uMtgMoveLateral );
@@ -932,7 +940,7 @@ void ACPP_CharacterPaul::CommandMoveLateralDownLoop ( )
 	sAttackInfo.DamagePoint = EDamagePointInteraction::Special;
 	sAttackInfo.DamageAmount = 0;
 
-	this->SetToLocationFrame ( FVector ( 30 , 250 , 0 ) , 5 );
+	this->SetToRelativeLocationFrame ( FVector ( 30 , 250 , 0 ) , 5 );
 
 	// 애니매이션 실행 부분 없음
 
@@ -949,8 +957,8 @@ void ACPP_CharacterPaul::CommandLeadJab ( )
 
 	SetActtacInfoSkell ( EDamagePointInteraction::Top , 5 , 10 , 20 , 0 , 8 , 1 , 8 );
 
-	sAttackInfo.skellEffectLocation = this->RelativePointVector ( 90 , 5 , 50 );
-	sAttackInfo.KnockBackDirection = this->RelativePointVector ( 300 , 0 , 0 );
+	sAttackInfo.skellEffectLocation = this->RelativePointVector ( 90 , 5 , 50 ) + this->GetActorLocation();
+	sAttackInfo.KnockBackDirection = this->RelativePointVector ( 200 , 0 , 0 );
 
 	this->SetAttackInfoOwnerOpposite ( ); // 내부 owner frame opposite frame 자동 세팅용 함수
 	
@@ -960,7 +968,7 @@ void ACPP_CharacterPaul::CommandLeadJab ( )
 
 	sAttackInfo.debugColor = FColor ( 255 , 128 , 128 );
 	// 추후 애니메이션 있을 시 애니메이션 이동으로 변경
-	this->SetToLocationFrame( FVector(30, 0, 0) , 5);	
+	this->SetToRelativeLocationFrame( FVector(130, 0, 0) , 5);	
 
 	// 애니매이션 실행 부분
 	PlayMontageFrameSystem ( uMtgLeadJab );
@@ -979,7 +987,7 @@ void ACPP_CharacterPaul::CommandCrossStaight ( )
 
 	SetActtacInfoSkell ( EDamagePointInteraction::Top , 5 , 10 , 20 , 0 , 6 , 0 , 6 );
 
-	sAttackInfo.skellEffectLocation = this->RelativePointVector ( 90 , -5 , 60 );
+	sAttackInfo.skellEffectLocation = this->RelativePointVector ( 90 , -5 , 60 ) + this->GetActorLocation ( );
 	sAttackInfo.KnockBackDirection = this->RelativePointVector ( 160 , 0 , 0 );
 
 	this->SetAttackInfoOwnerOpposite ( ); // 내부 owner frame opposite frame 자동 세팅용 함수
@@ -988,7 +996,7 @@ void ACPP_CharacterPaul::CommandCrossStaight ( )
 	sAttackInfo.cameraZoom = 0;
 	sAttackInfo.cameraDelay = 0;
 
-	this->SetToLocationFrame ( FVector ( 20 , 0 , 0 ) , 5 );
+	this->SetToRelativeLocationFrame ( FVector ( 20 , 0 , 0 ) , 5 );
 
 
 	// 애니매이션 실행 부분
@@ -1008,7 +1016,7 @@ void ACPP_CharacterPaul::CommandJingun ( )
 
 	SetActtacInfoSkell ( EDamagePointInteraction::Middle , 14 , 15 , 20 , 0 , -1 , -12 , -1 );
 
-	sAttackInfo.skellEffectLocation = this->RelativePointVector ( 100 , 5 , 00 );
+	sAttackInfo.skellEffectLocation = this->RelativePointVector ( 100 , 5 , 00 ) + this->GetActorLocation ( );
 	sAttackInfo.KnockBackDirection = this->RelativePointVector ( 150 , 0 , 0 );
 
 	this->SetAttackInfoOwnerOpposite ( ); // 내부 owner frame opposite frame 자동 세팅용 함수
@@ -1017,7 +1025,7 @@ void ACPP_CharacterPaul::CommandJingun ( )
 	sAttackInfo.cameraZoom = 0;
 	sAttackInfo.cameraDelay = 0;
 
-	this->SetToLocationPoint ( 10 , 0 , 0 );
+	this->SetToRelativeLocationFrame ( FVector ( 10 , 0 , 0 ) , 5 );
 
 	// 애니매이션 실행 부분
 	PlayMontageFrameSystem ( uMtgJingun );
@@ -1035,7 +1043,7 @@ void ACPP_CharacterPaul::CommandHighKick ( )
 
 	SetActtacInfoSkell ( EDamagePointInteraction::Top , 17 , 12 , 20 , 0 , 14 , 4 , 57 );
 
-	sAttackInfo.skellEffectLocation = this->RelativePointVector ( 120 , -5 , 60 );
+	sAttackInfo.skellEffectLocation = this->RelativePointVector ( 120 , -5 , 60 ) + this->GetActorLocation ( );
 	sAttackInfo.KnockBackDirection = this->RelativePointVector ( 150 , 0 , 0 );
 
 	this->SetAttackInfoOwnerOpposite ( ); // 내부 owner frame opposite frame 자동 세팅용 함수
@@ -1044,7 +1052,7 @@ void ACPP_CharacterPaul::CommandHighKick ( )
 	sAttackInfo.cameraZoom = 0;
 	sAttackInfo.cameraDelay = 0;
 
-	this->SetToLocationPoint ( 5 , 0 , 0 );
+	this->SetToRelativeLocationFrame ( FVector ( 5 , 0 , 0 ) , 5 );
 
 	// 애니매이션 실행 부분
 	PlayMontageFrameSystem ( uMtgHighKick );
@@ -1064,7 +1072,7 @@ void ACPP_CharacterPaul::CommandBungGuan ( )
 	this->eCharacterState = ECharacterStateInteraction::AttackMiddle;
 	SetActtacInfoSkell ( EDamagePointInteraction::Middle , 17 , 20, 20 , 0 ,0 , 0 ,0 );
 
-	sAttackInfo.skellEffectLocation = this->RelativePointVector ( 200 , -5 , 60 );
+	sAttackInfo.skellEffectLocation = this->RelativePointVector ( 200 , -5 , 60 ) + this->GetActorLocation ( );
 	sAttackInfo.KnockBackDirection = this->RelativePointVector ( 500 , 0 , 20 );
 
 	this->SetAttackInfoOwnerOpposite ( ); // 내부 owner frame opposite frame 자동 세팅용 함수
@@ -1073,7 +1081,7 @@ void ACPP_CharacterPaul::CommandBungGuan ( )
 	sAttackInfo.cameraZoom = 0;
 	sAttackInfo.cameraDelay = 0;
 
-	this->SetToLocationPoint ( 30 , 0 , 0 );
+	this->SetToRelativeLocationFrame ( FVector ( 30 , 0 , 0 ) , 5 );
 
 	// 애니매이션 실행 부분
 	PlayMontageFrameSystem ( uMtgBungGuan );
@@ -1092,7 +1100,7 @@ void ACPP_CharacterPaul::CommandJinJee ( )
 
 	SetActtacInfoSkell ( EDamagePointInteraction::Middle , 20 , 5 , 12 , 0 , 15 , -14 , 0 );
 
-	sAttackInfo.skellEffectLocation = this->RelativePointVector ( 50 , -5 , 10 );
+	sAttackInfo.skellEffectLocation = this->RelativePointVector ( 50 , -5 , 10 ) + this->GetActorLocation ( );
 	sAttackInfo.KnockBackDirection = this->RelativePointVector ( 10 , 0 , 300 );
 
 	this->SetAttackInfoOwnerOpposite ( ); // 내부 owner frame opposite frame 자동 세팅용 함수
@@ -1101,7 +1109,8 @@ void ACPP_CharacterPaul::CommandJinJee ( )
 	sAttackInfo.cameraZoom = 0;
 	sAttackInfo.cameraDelay = 0;
 
-	this->SetToLocationPoint ( 10 , 0 , 0 );
+	this->SetToRelativeLocationFrame ( FVector ( 10 , 0 , 0 ) , 5 );
+
 
 	// 애니매이션 실행 부분
 	PlayMontageFrameSystem ( uMtgLeadJab );
@@ -1120,7 +1129,7 @@ void ACPP_CharacterPaul::CommandSitJab( )
 
 	SetActtacInfoSkell ( EDamagePointInteraction::Middle , 15 , 4 , 8 , 0 , 10 , -5 , 6 );
 
-	sAttackInfo.skellEffectLocation = this->RelativePointVector ( 80 , -5 , 10 );
+	sAttackInfo.skellEffectLocation = this->RelativePointVector ( 80 , -5 , 10 ) + this->GetActorLocation ( );
 	sAttackInfo.KnockBackDirection = this->RelativePointVector ( 120 , 0 , 0 );
 
 	this->SetAttackInfoOwnerOpposite ( ); // 내부 owner frame opposite frame 자동 세팅용 함수
@@ -1129,7 +1138,7 @@ void ACPP_CharacterPaul::CommandSitJab( )
 	sAttackInfo.cameraZoom = 0;
 	sAttackInfo.cameraDelay = 0;
 
-	this->SetToLocationPoint ( 10 , 0 , 0 );
+	this->SetToRelativeLocationFrame ( FVector ( 2 , 0 , 0 ) , 3 );
 
 	// 애니매이션 실행 부분
 	PlayMontageFrameSystem ( uMtgSitJab );
@@ -1149,7 +1158,7 @@ void ACPP_CharacterPaul::CommandSitSpineKick ( )
 	SetActtacInfoSkell ( EDamagePointInteraction::Lower , 15 , 12 , 8 , 0 , 10 , -5 , 6 );
 
 
-	sAttackInfo.skellEffectLocation = this->RelativePointVector ( 120 , -5 , -40 );
+	sAttackInfo.skellEffectLocation = this->RelativePointVector ( 120 , -5 , -40 ) + this->GetActorLocation ( );
 	sAttackInfo.KnockBackDirection = this->RelativePointVector ( 140 , -5 , 0 );
 
 	this->SetAttackInfoOwnerOpposite ( ); // 내부 owner frame opposite frame 자동 세팅용 함수
@@ -1158,7 +1167,8 @@ void ACPP_CharacterPaul::CommandSitSpineKick ( )
 	sAttackInfo.cameraZoom = 0;
 	sAttackInfo.cameraDelay = 0;
 
-	this->SetToLocationPoint ( 0 , 0 , 0 );
+	this->SetToRelativeLocationFrame ( FVector ( 0 , 0 , 0 ) , 3 );
+
 
 	// 애니매이션 실행 부분
 	PlayMontageFrameSystem ( uMtgSitSpineKick );
@@ -1192,12 +1202,16 @@ bool ACPP_CharacterPaul::HitDecision ( FAttackInfoInteraction attackInfoHit , AC
 	if ( aMainCamera )
 		aMainCamera->RequestZoomEffect ( attackInfoHit.skellEffectLocation , attackInfoHit.cameraZoom , attackInfoHit.cameraShake , attackInfoHit.cameraDelay );
 	else
-		UE_LOG(LogTemp, Warning, TEXT("is Emtyp ") );
+		UE_LOG(LogTemp, Warning, TEXT("is Emtpy ") );
 	if ( attackInfoHit.DamagePoint == EDamagePointInteraction::Top && this->eCharacterState == ECharacterStateInteraction::GuardStand )
 	{
+
 		this->sFrameStatus.FrameBlockUsing = attackInfoHit.OppositeGuardFrame;
-		//this->SetToWorldLocationPoint ( (attackInfoHit.KnockBackDirection - this->GetActorLocation ( )) / 2 + this->GetActorLocation ( ));
-		LaunchCharacter( (attackInfoHit.KnockBackDirection - this->GetActorLocation ( )) / 2 + this->GetActorLocation ( ), true, true );
+		// this->SetToWorldLocationPoint ( (attackInfoHit.KnockBackDirection - this->GetActorLocation ( )) / 2 + this->GetActorLocation ( ));
+		this->SetToLocationFrame ( attackInfoHit.KnockBackDirection, 10 );
+		LaunchCharacter( FVector(0,0,300), true, true );
+
+		//LaunchCharacter( (attackInfoHit.KnockBackDirection - this->GetActorLocation ( )) * 2 , true, true );
 		// defense animation 추가하기
 		PlayMontageFrameSystem ( uMtgDefence );
 		// 디펜스 파티클
@@ -1209,8 +1223,9 @@ bool ACPP_CharacterPaul::HitDecision ( FAttackInfoInteraction attackInfoHit , AC
 	if ( attackInfoHit.DamagePoint == EDamagePointInteraction::Middle && this->eCharacterState == ECharacterStateInteraction::GuardStand )
 	{
 		this->sFrameStatus.FrameBlockUsing = attackInfoHit.OppositeGuardFrame;
-		//this->SetToWorldLocationPoint ( (attackInfoHit.KnockBackDirection - this->GetActorLocation ( )) / 2 + this->GetActorLocation ( ) );
-		LaunchCharacter ( (attackInfoHit.KnockBackDirection - this->GetActorLocation ( )) / 2 + this->GetActorLocation ( ) , true , true );
+		this->SetToLocationFrame ( attackInfoHit.KnockBackDirection, 10 );
+
+		//LaunchCharacter ( (attackInfoHit.KnockBackDirection - this->GetActorLocation ( )) * 2 , true , true );
 		// defense animation 추가하기
 		if (this->bCrouched )
 			PlayMontageFrameSystem ( uMtgSitDefence );
@@ -1225,8 +1240,9 @@ bool ACPP_CharacterPaul::HitDecision ( FAttackInfoInteraction attackInfoHit , AC
 	if ( attackInfoHit.DamagePoint == EDamagePointInteraction::Lower && this->eCharacterState == ECharacterStateInteraction::GuardSit )
 	{
 		this->sFrameStatus.FrameBlockUsing = attackInfoHit.OppositeGuardFrame;
-		//this->SetToWorldLocationPoint ( ( attackInfoHit.KnockBackDirection - this->GetActorLocation ( ) ) / 2 + this->GetActorLocation ( ) );
-		LaunchCharacter ( (attackInfoHit.KnockBackDirection - this->GetActorLocation ( )) / 2 + this->GetActorLocation ( ) , true , true );
+		this->SetToLocationFrame ( attackInfoHit.KnockBackDirection , 10 );
+		//LaunchCharacter ( (attackInfoHit.KnockBackDirection - this->GetActorLocation ( )) * 2 , true , true );
+		// 
 		// defense animation 추가하기
 		PlayMontageFrameSystem ( uMtgSitDefence );
 
@@ -1238,7 +1254,9 @@ bool ACPP_CharacterPaul::HitDecision ( FAttackInfoInteraction attackInfoHit , AC
 	this->SetActorRotation ( UKismetMathLibrary::FindLookAtRotation ( this->GetActorLocation ( ) , this->aOpponentPlayer->GetActorLocation ( ) ) );
 	this->sFrameStatus.FrameBlockUsing = attackInfoHit.OppositeHitFrame;
 	//this->SetToWorldLocationPoint ( attackInfoHit.KnockBackDirection );
-	LaunchCharacter ( attackInfoHit.KnockBackDirection , true , true );
+	this->SetToLocationFrame ( attackInfoHit.KnockBackDirection , 10 );
+	//LaunchCharacter ( (attackInfoHit.KnockBackDirection - this->GetActorLocation ( )) * 4 , true , true );
+
 	// heart animation 추가하기
 	if ( this->Hp > 0 )
 	{
