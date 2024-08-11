@@ -397,6 +397,7 @@ void ACPP_CharacterPaul::SettingCommandTree ( )
 	SetSelfReLinkTree ( { 0,forwardkey,0, forwardkey } );
 	this->AddCommandBaseTree ( { 0, forwardkey, 0, forwardkey } , 0 , 0 , 3 , &ACPP_CharacterPaul::CommandEnd );
 
+	
 
 	/**
 	 *  BackKey
@@ -1078,9 +1079,9 @@ void ACPP_CharacterPaul::CommandSitJab( )
 
 	this->eCharacterState = ECharacterStateInteraction::AttackMiddle;
 
-	SetActtacInfoSkell ( EDamagePointInteraction::Middle , 15 , 4 , 8 , 0 , 10 , -5 , 6 );
+	SetActtacInfoSkell ( EDamagePointInteraction::Middle , 15 , 6 , 12 , 0 , 10 , -5 , 6 );
 
-	sAttackInfo.skellEffectLocation = this->RelativePointVector ( 80 , -5 , 10 ) + this->GetActorLocation ( );
+	sAttackInfo.skellEffectLocation = this->RelativePointVector ( 90 , -5 , 10 ) + this->GetActorLocation ( );
 	sAttackInfo.KnockBackDirection = this->RelativePointVector ( 120 , 0 , 0 );
 
 	this->SetAttackInfoOwnerOpposite ( ); // 내부 owner frame opposite frame 자동 세팅용 함수
@@ -1109,7 +1110,7 @@ void ACPP_CharacterPaul::CommandSitSpineKick ( )
 	SetActtacInfoSkell ( EDamagePointInteraction::Lower , 15 , 12 , 8 , 0 , 10 , -5 , 6 );
 
 
-	sAttackInfo.skellEffectLocation = this->RelativePointVector ( 120 , -5 , -40 ) + this->GetActorLocation ( );
+	sAttackInfo.skellEffectLocation = this->RelativePointVector ( 120 , -5 , -50 ) + this->GetActorLocation ( );
 	sAttackInfo.KnockBackDirection = this->RelativePointVector ( 140 , -5 , 0 );
 
 	this->SetAttackInfoOwnerOpposite ( ); // 내부 owner frame opposite frame 자동 세팅용 함수
