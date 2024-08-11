@@ -10,6 +10,8 @@
 void UAIStateBackDash::Enter ( UAICharacterAnimInstance* pAnimInstance )
 {
 	Super::Enter ( pAnimInstance );
+	attackCount = 0;
+
 	lookPlayerRotator = UKismetMathLibrary::FindLookAtRotation ( owner->GetActorLocation ( ) , owner->aOpponentPlayer->GetActorLocation ( ) );
 	dashLocation = owner->GetActorForwardVector ( ) * -1.0f * 50.f;
 	startLocation = owner->GetActorLocation ( );

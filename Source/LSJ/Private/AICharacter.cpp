@@ -79,7 +79,8 @@ AAICharacter::AAICharacter()
 	collisionLower->SetBoxExtent ( FVector ( 319.717793 , 321.694333 ,336.888169 ) );
 	collisionLower->SetUsingAbsoluteRotation ( true );
 	collisionLower->SetRelativeLocation ( FVector ( 0.092165 , 531.000000 , 117.000000 ) );
-
+	//collisionBody = CreateDefaultSubobject<UCapsuleComponent> ( TEXT ( "collisionBody" ) );
+	//collisionBody->SetupAttachment ( GetMesh ( ) , TEXT ( "spine_01" ) );
 	//콜리전 설정
 	//플레이어랑만 충돌
 
@@ -490,71 +491,159 @@ void AAICharacter::SetStateIdle ( )
 
 void AAICharacter::OnAttackCollisionLF ( )
 {
-	collisionLF->SetCollisionEnabled ( ECollisionEnabled::QueryOnly);
+	//collisionLF->SetCollisionEnabled ( ECollisionEnabled::QueryOnly);
+	float radius = 20.0f;
+	TArray<TEnumAsByte<EObjectTypeQuery>> traceObjectTypes;
+	traceObjectTypes.Add ( UEngineTypes::ConvertToObjectType ( ECollisionChannel::ECC_Pawn ) );
+	TArray<AActor*> ignoreActors;
+	ignoreActors.Init ( this , 1 );
+	TArray<AActor*> outActors;
+	FVector sphereSpawnLocation = collisionLF->GetComponentLocation ( );
+	UClass* seekClass = ACPP_Tekken8CharacterParent::StaticClass ( );
+	bool hit = UKismetSystemLibrary::SphereOverlapActors ( GetWorld ( ) , sphereSpawnLocation , radius , traceObjectTypes , seekClass , ignoreActors , outActors );;
+	FAttackInfoInteraction hitInfo = SendAttackInfo ( );
+	if ( hit )
+	{
+		for ( AActor* hitActor : outActors )
+		{
+			if ( hitActor->IsA<ACPP_Tekken8CharacterParent> ( ) )
+			{
+				ACPP_Tekken8CharacterParent* hitCharacter = Cast<ACPP_Tekken8CharacterParent> ( hitActor );
+				//공격 결과 blackboardComp에 넣기 
+				blackboardComp->SetValueAsEnum ( TEXT ( "EAttackResult" ) , 0 ); //0 : hit - EAttackResult
+
+				hitInfo.skellEffectLocation = sphereSpawnLocation;
+				//공격 결과 blackboardComp에 넣기 
+				blackboardComp->SetValueAsEnum ( TEXT ( "EAttackResult" ) , aOpponentPlayer->HitDecision ( hitInfo , this ) ? 1 : 0 ); //0 : hit - EAttackResult
+
+				//DrawDebugSphere ( GetWorld ( ) , collisionLH->GetComponentLocation ( ) , 20 , 26 , FColor ( 181 , 0 , 0 ) , true , 0.5f , 0 , 0.5f );
+				IsAttacked = true;
+			}
+		}
+	}
+	else
+	{
+		// 아무도 안맞았을때
+		blackboardComp->SetValueAsEnum ( TEXT ( "EAttackResult" ) , 2 ); //2 : Miss - EAttackResult
+	}
 }
 
 void AAICharacter::OnAttackCollisionRF ( )
 {
-	collisionRF->SetCollisionEnabled ( ECollisionEnabled::QueryOnly );
+	//collisionRF->SetCollisionEnabled ( ECollisionEnabled::QueryOnly );
+	float radius = 20.0f;
+	TArray<TEnumAsByte<EObjectTypeQuery>> traceObjectTypes;
+	traceObjectTypes.Add ( UEngineTypes::ConvertToObjectType ( ECollisionChannel::ECC_Pawn ) );
+	TArray<AActor*> ignoreActors;
+	ignoreActors.Init ( this , 1 );
+	TArray<AActor*> outActors;
+	FVector sphereSpawnLocation = collisionRF->GetComponentLocation ( );
+	UClass* seekClass = ACPP_Tekken8CharacterParent::StaticClass ( );
+	bool hit = UKismetSystemLibrary::SphereOverlapActors ( GetWorld ( ) , sphereSpawnLocation , radius , traceObjectTypes , seekClass , ignoreActors , outActors );;
+	FAttackInfoInteraction hitInfo = SendAttackInfo ( );
+	if ( hit )
+	{
+		for ( AActor* hitActor : outActors )
+		{
+			if ( hitActor->IsA<ACPP_Tekken8CharacterParent> ( ) )
+			{
+				ACPP_Tekken8CharacterParent* hitCharacter = Cast<ACPP_Tekken8CharacterParent> ( hitActor );
+				//공격 결과 blackboardComp에 넣기 
+				blackboardComp->SetValueAsEnum ( TEXT ( "EAttackResult" ) , 0 ); //0 : hit - EAttackResult
+
+				hitInfo.skellEffectLocation = sphereSpawnLocation;
+				//공격 결과 blackboardComp에 넣기 
+				blackboardComp->SetValueAsEnum ( TEXT ( "EAttackResult" ) , aOpponentPlayer->HitDecision ( hitInfo , this ) ? 1 : 0 ); //0 : hit - EAttackResult
+
+				//DrawDebugSphere ( GetWorld ( ) , collisionLH->GetComponentLocation ( ) , 20 , 26 , FColor ( 181 , 0 , 0 ) , true , 0.5f , 0 , 0.5f );
+				IsAttacked = true;
+			}
+		}
+	}
+	else
+	{
+		// 아무도 안맞았을때
+		blackboardComp->SetValueAsEnum ( TEXT ( "EAttackResult" ) , 2 ); //2 : Miss - EAttackResult
+	}
 }
 
 void AAICharacter::OnAttackCollisionLH ( )
 {
-	collisionLH->SetCollisionEnabled ( ECollisionEnabled::QueryOnly );
-	//float radius = 20.0f;
-	//TArray<TEnumAsByte<EObjectTypeQuery>> traceObjectTypes;
-	//traceObjectTypes.Add ( UEngineTypes::ConvertToObjectType ( ECollisionChannel::ECC_Pawn ) );
-	//TArray<AActor*> ignoreActors;
-	//ignoreActors.Init ( this , 1 );
-	//TArray<AActor*> outActors;
-	//FVector sphereSpawnLocation = collisionLH->GetComponentLocation();
-	//UClass* seekClass = ACPP_Tekken8CharacterParent::StaticClass ( );
-	//bool hit = UKismetSystemLibrary::SphereOverlapActors ( GetWorld ( ) , sphereSpawnLocation , radius , traceObjectTypes , seekClass , ignoreActors , outActors );;
-	//if ( hit )
-	//{
-	//	for ( AActor* hitActor : outActors )
-	//	{
-	//		if ( hitActor->IsA<ACPP_Tekken8CharacterParent> ( ) )
-	//		{
-	//			ACPP_Tekken8CharacterParent* hitCharacter = Cast<ACPP_Tekken8CharacterParent> ( hitActor );
-	//			//hitCharacter->HitDecision ( SendAttackInfo ( ) , this );
-	//			//DrawDebugSphere ( GetWorld ( ) , collisionLH->GetComponentLocation ( ) , 20 , 26 , FColor ( 181 , 0 , 0 ) , true , 0.5f , 0 , 0.5f );
-	//			//if ( hitCharacter->HitDecision ( SendAttackInfo () , this ) )
-	//	/*			sFrameStatus.FrameBlockUsing = attackInfo.OwnerGuardFrame;
-	//			else
-	//				sFrameStatus.FrameBlockUsing = attackInfo.OwnerGuardFrame;*/
-	//		}
-	//	}
-	//}
+	//collisionLH->SetCollisionEnabled ( ECollisionEnabled::QueryOnly );
+
+	float radius = 20.0f;
+	TArray<TEnumAsByte<EObjectTypeQuery>> traceObjectTypes;
+	traceObjectTypes.Add ( UEngineTypes::ConvertToObjectType ( ECollisionChannel::ECC_Pawn ) );
+	TArray<AActor*> ignoreActors;
+	ignoreActors.Init ( this , 1 );
+	TArray<AActor*> outActors;
+	FVector sphereSpawnLocation = collisionLH->GetComponentLocation();
+	UClass* seekClass = ACPP_Tekken8CharacterParent::StaticClass ( );
+	bool hit = UKismetSystemLibrary::SphereOverlapActors ( GetWorld ( ) , sphereSpawnLocation , radius , traceObjectTypes , seekClass , ignoreActors , outActors );;
+	FAttackInfoInteraction hitInfo = SendAttackInfo ( );
+	if ( hit )
+	{
+		for ( AActor* hitActor : outActors )
+		{
+			if ( hitActor->IsA<ACPP_Tekken8CharacterParent> ( ) )
+			{
+				ACPP_Tekken8CharacterParent* hitCharacter = Cast<ACPP_Tekken8CharacterParent> ( hitActor );
+				//공격 결과 blackboardComp에 넣기 
+				blackboardComp->SetValueAsEnum ( TEXT ( "EAttackResult" ) , 0 ); //0 : hit - EAttackResult
+
+				hitInfo.skellEffectLocation = sphereSpawnLocation;
+				//공격 결과 blackboardComp에 넣기 
+				blackboardComp->SetValueAsEnum ( TEXT ( "EAttackResult" ) , aOpponentPlayer->HitDecision ( hitInfo , this ) ? 1 : 0 ); //0 : hit - EAttackResult
+
+				//DrawDebugSphere ( GetWorld ( ) , collisionLH->GetComponentLocation ( ) , 20 , 26 , FColor ( 181 , 0 , 0 ) , true , 0.5f , 0 , 0.5f );
+				IsAttacked = true;
+			}
+		}
+	}
+	else
+	{
+		// 아무도 안맞았을때
+		blackboardComp->SetValueAsEnum ( TEXT ( "EAttackResult" ) , 2 ); //2 : Miss - EAttackResult
+	}
 }
 
 void AAICharacter::OnAttackCollisionRH ( )
 {
-	collisionRH->SetCollisionEnabled ( ECollisionEnabled::QueryOnly );
-	//float radius = 20.0f;
-	//TArray<TEnumAsByte<EObjectTypeQuery>> traceObjectTypes;
-	//traceObjectTypes.Add ( UEngineTypes::ConvertToObjectType ( ECollisionChannel::ECC_Pawn ) );
-	//TArray<AActor*> ignoreActors;
-	//ignoreActors.Init ( this , 1 );
-	//TArray<AActor*> outActors;
-	//FVector sphereSpawnLocation = collisionRH->GetComponentLocation ( );
-	//UClass* seekClass = ACPP_Tekken8CharacterParent::StaticClass ( );
-	//bool hit = UKismetSystemLibrary::SphereOverlapActors ( GetWorld ( ) , sphereSpawnLocation , radius , traceObjectTypes , seekClass , ignoreActors , outActors );;
-	//if ( hit )
-	//{
-	//	for ( AActor* hitActor : outActors )
-	//	{
-	//		if ( hitActor->IsA<ACPP_Tekken8CharacterParent> ( ) )
-	//		{
-	//			ACPP_Tekken8CharacterParent* hitCharacter = Cast<ACPP_Tekken8CharacterParent> ( hitActor );
-	//			//hitCharacter->HitDecision ( SendAttackInfo ( ) , this );
-	//			//if ( hitCharacter->HitDecision ( SendAttackInfo () , this ) )
-	//	/*			sFrameStatus.FrameBlockUsing = attackInfo.OwnerGuardFrame;
-	//			else
-	//				sFrameStatus.FrameBlockUsing = attackInfo.OwnerGuardFrame;*/
-	//		}
-	//	}
-	//}
+	//collisionRH->SetCollisionEnabled ( ECollisionEnabled::QueryOnly );
+	float radius = 20.0f;
+	TArray<TEnumAsByte<EObjectTypeQuery>> traceObjectTypes;
+	traceObjectTypes.Add ( UEngineTypes::ConvertToObjectType ( ECollisionChannel::ECC_Pawn ) );
+	TArray<AActor*> ignoreActors;
+	ignoreActors.Init ( this , 1 );
+	TArray<AActor*> outActors;
+	FVector sphereSpawnLocation = collisionRH->GetComponentLocation ( );
+	UClass* seekClass = ACPP_Tekken8CharacterParent::StaticClass ( );
+	bool hit = UKismetSystemLibrary::SphereOverlapActors ( GetWorld ( ) , sphereSpawnLocation , radius , traceObjectTypes , seekClass , ignoreActors , outActors );;
+	FAttackInfoInteraction hitInfo = SendAttackInfo ( );
+	if ( hit )
+	{
+		for ( AActor* hitActor : outActors )
+		{
+			if ( hitActor->IsA<ACPP_Tekken8CharacterParent> ( ) )
+			{
+				ACPP_Tekken8CharacterParent* hitCharacter = Cast<ACPP_Tekken8CharacterParent> ( hitActor );
+				//공격 결과 blackboardComp에 넣기 
+				blackboardComp->SetValueAsEnum ( TEXT ( "EAttackResult" ) , 0 ); //0 : hit - EAttackResult
+
+				hitInfo.skellEffectLocation = sphereSpawnLocation;
+				//공격 결과 blackboardComp에 넣기 
+				blackboardComp->SetValueAsEnum ( TEXT ( "EAttackResult" ) , aOpponentPlayer->HitDecision ( hitInfo , this ) ? 1 : 0 ); //0 : hit - EAttackResult
+
+				//DrawDebugSphere ( GetWorld ( ) , collisionLH->GetComponentLocation ( ) , 20 , 26 , FColor ( 181 , 0 , 0 ) , true , 0.5f , 0 , 0.5f );
+				IsAttacked = true;
+			}
+		}
+	}
+	else
+	{
+		// 아무도 안맞았을때
+		blackboardComp->SetValueAsEnum ( TEXT ( "EAttackResult" ) , 2 ); //2 : Miss - EAttackResult
+	}
 }
 
 void AAICharacter::OffAttackCollisionLF ( )

@@ -18,7 +18,14 @@ void UAIStateBound::SetAttackInfo ( FAttackInfoInteraction& pAttackInfo )
 void UAIStateBound::Enter ( UAICharacterAnimInstance* pAnimInstance )
 {
 	Super::Enter ( pAnimInstance );
-	owner->GetBlackboardComponent ( )->SetValueAsBool ( TEXT ( "IsBound" ) , false ); // 원하는 값을 설정
+	if ( false == owner->GetBlackboardComponent ( )->GetValueAsBool ( TEXT ( "IsBound" ) ) )
+	{
+		Exit ( );
+		return;
+	}
+
+
+	owner->GetBlackboardComponent ( )->SetValueAsBool ( TEXT ( "IsBound" ) , false );
 
 	{
 		FVector Direction = owner->GetActorLocation ( ) - owner->aOpponentPlayer->GetActorLocation ( ) + owner->aOpponentPlayer->GetActorForwardVector ( ) * -1000.f;

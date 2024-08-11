@@ -96,7 +96,10 @@ UAICharacterAnimInstance::UAICharacterAnimInstance ( )
     ( TEXT ( "/Script/Engine.AnimMontage'/Game/LSJ/Animation/FinalAnimation/Laying1_Montage.Laying1_Montage'" ) ); //"/Script/Engine.AnimSequence'/Game/Jaebin/Kazuya/Walk_Forward/Walking_Anim.Walking_Anim'" ) );
     if ( knockDownMontageFinder.Succeeded ( ) )
         knockDownMontage = knockDownMontageFinder.Object;
-    
+    static ConstructorHelpers::FObjectFinder <UAnimMontage> standUpMontageFinder
+    ( TEXT ( "/Script/Engine.AnimMontage'/Game/LSJ/Animation/FinalAnimation/A_StandUp_Front2_Montage.A_StandUp_Front2_Montage'" ) ); //"/Script/Engine.AnimSequence'/Game/Jaebin/Kazuya/Walk_Forward/Walking_Anim.Walking_Anim'" ) );
+    if ( standUpMontageFinder.Succeeded ( ) )
+        standUpMontage = standUpMontageFinder.Object;
     static ConstructorHelpers::FObjectFinder <UAnimMontage> hitLowerRFMontageFinder
     ( TEXT ( "/Script/Engine.AnimMontage'/Game/LSJ/Animation/FinalAnimation/A_HitLeg_R_IP2_Montage.A_HitLeg_R_IP2_Montage'" ) ); //"/Script/Engine.AnimSequence'/Game/Jaebin/Kazuya/Walk_Forward/Walking_Anim.Walking_Anim'" ) );
     if ( hitLowerRFMontageFinder.Succeeded ( ) )

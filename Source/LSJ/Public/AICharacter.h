@@ -87,7 +87,8 @@ public:
 	class UBoxComponent* collisionMiddle;
 	UPROPERTY ( EditDefaultsOnly )
 	class UBoxComponent* collisionLower;
-
+	//UPROPERTY ( EditDefaultsOnly )
+	//class UCapsuleComponent* collisionBody;
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

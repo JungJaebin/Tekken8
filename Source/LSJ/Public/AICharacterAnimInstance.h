@@ -35,10 +35,6 @@ class LSJ_API UAICharacterAnimInstance : public UAnimInstance
 	UPROPERTY(EditAnyWhere , BlueprintReadOnly, Category = Move, Meta = (AllowPrivateAccess = true))
 	UAnimMontage* attackLFMontage;
 
-
-
-	UPROPERTY(EditAnyWhere , BlueprintReadOnly, Category = Move, Meta = (AllowPrivateAccess = true))
-	UAnimMontage* hitFallingTurnMontage;
 	UPROPERTY(EditAnyWhere , BlueprintReadOnly, Category = Move, Meta = (AllowPrivateAccess = true))
 	UAnimMontage* boundMontage;
 	//콤보 레이저 몽타주 
@@ -72,7 +68,10 @@ public:
 	UAnimMontage* hitLowerRFMontage;
 	UPROPERTY ( EditAnyWhere , BlueprintReadOnly , Category = Move )
 	UAnimMontage* hitFallingMontage;
-
+	UPROPERTY(EditAnyWhere , BlueprintReadOnly, Category = Move, Meta = (AllowPrivateAccess = true))
+	UAnimMontage* hitFallingTurnMontage;
+		UPROPERTY(EditAnyWhere , BlueprintReadOnly, Category = Move, Meta = (AllowPrivateAccess = true))
+	UAnimMontage* standUpMontage;
 	UAICharacterAnimInstance();
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	float movementSpeed;
