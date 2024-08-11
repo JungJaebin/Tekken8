@@ -58,7 +58,8 @@ public:
 	AAICharacter();
 
 	//시작움직임설정
-	virtual void StartMove ( );
+	virtual void StartPlayer ( );
+	virtual void EndPlayer ( );
 
 	//이펙트
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Default")
