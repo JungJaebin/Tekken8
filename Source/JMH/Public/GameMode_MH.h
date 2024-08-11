@@ -46,6 +46,9 @@ protected:
 
 
 public:
+
+	UPROPERTY()
+	class UMainGameInstance_MH* MainGameInstance;
 	
 	//widget
 	UPROPERTY(EditAnywhere , BlueprintReadWrite)
@@ -66,17 +69,18 @@ public:
 	class ACPP_Tekken8CharacterParent* playerB;
 
 	//Player HP
-	UPROPERTY(EditDefaultsOnly , BlueprintReadWrite , Category = "Round")
-	int32 player1HP;
-
-	UPROPERTY(EditDefaultsOnly , BlueprintReadWrite , Category = "Round")
-	int32 player2HP;
 
 	UPROPERTY(EditDefaultsOnly , BlueprintReadWrite , Category = "Round")
 	int32 player1MaxHP;
 
 	UPROPERTY(EditDefaultsOnly , BlueprintReadWrite , Category = "Round")
 	int32 player2MaxHP;
+	
+	UPROPERTY(EditDefaultsOnly , BlueprintReadWrite , Category = "Round")
+	int32 player1HP = player1MaxHP;
+
+	UPROPERTY(EditDefaultsOnly , BlueprintReadWrite , Category = "Round")
+	int32 player2HP = player2MaxHP;
 
 	// ** for make Character **//
 	UPROPERTY(EditDefaultsOnly , BlueprintReadWrite)
@@ -170,6 +174,7 @@ public:
 	UFUNCTION()
 	bool IsGameOverConditionMet();
 	
+	
 	//State//____e____
 public:	
 	//Player 
@@ -211,10 +216,6 @@ public:
 	APlayerController* PlayerAController;
 	UPROPERTY()
 	AController* PlayerBController;
-	//class AController* inputplayerController;
-    //UPROPERTY()
-	//class AController* playerBController;
-
 	
 	//Camera
 	UFUNCTION()
@@ -245,4 +246,16 @@ public:
 	
 	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite)
 	FRotator initCameraRot;
+
+
+	
+	//게임인스턴스에서 가져오기
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Game Data")
+	int32 CharacterIndex; //1.paul,2.Kazuya
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Game Data")
+	int32 GameModeIndex; //1.PvsP,2.PvsCPU
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Game Data")
+	bool IsLeftSide;//true.Left,false.Right
 };
