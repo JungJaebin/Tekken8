@@ -7,9 +7,9 @@
 #include "CPP_CharacterPaul.h"
 #include "CPP_InputControl.h"
 #include "inGameUI.h"
+#include "MainGameInstance_MH.h"
 #include "PlayerInfoUI.h"
 #include "Blueprint/UserWidget.h"
-#include "Camera/CameraActor.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/Character.h"
 #include "Kismet/GameplayStatics.h"
@@ -25,6 +25,55 @@ void AGameMode_MH::BeginPlay()
 
 	ACPP_InputControl* Control = Cast<ACPP_InputControl>(GetWorld()->GetFirstPlayerController()->GetPawn());
 
+	//게임인스턴스에서 변수정보 받아오기
+	MainGameInstance = Cast<UMainGameInstance_MH>(GetWorld()->GetGameInstance());
+	CharacterIndex = MainGameInstance->Player1CharacterIndex;
+	GameModeIndex = MainGameInstance->GameModeSelectionIndex;
+	IsLeftSide = MainGameInstance->IsPlayerOnLeftSide;
+	//선택한 모드에 따라 캐릭터 스폰
+	//==1. PvsP
+	if(GameModeIndex==1)
+	{
+		static ConstructorHelpers::FClassFinder<ACPP_CharacterPaul> Player1ClassFinder(TEXT("/Game/Kyoulee/BluePrints/MyCPP_CharacterPaul.MyCPP_CharacterPaul"));
+		if (Player1ClassFinder.Succeeded())
+		{
+			Player1Class = Player1ClassFinder.Class;
+		}
+
+		static ConstructorHelpers::FClassFinder<ACPP_CharacterPaul> Player2ClassFinder(TEXT("/Game/Kyoulee/BluePrints/MyCPP_CharacterPaul.MyCPP_CharacterPaul"));
+		if (Player2ClassFinder.Succeeded())
+		{
+			Player2Class = Player2ClassFinder.Class;
+		}
+	}
+	//==2. PvsAi
+	else if (GameModeIndex==2)
+	{
+		//Ai모드라면 선택한 위치에 플레이어 스폰
+		//IsLeftSide true=player1스폰(왼쪽),false=player2스폰(오른쪽)
+		if(IsLeftSide)
+		{
+			static ConstructorHelpers::FClassFinder<ACPP_CharacterPaul> Player1ClassFinder(TEXT("/Game/Kyoulee/BluePrints/MyCPP_CharacterPaul.MyCPP_CharacterPaul"));
+			if (Player1ClassFinder.Succeeded())
+			{
+				Player1Class = Player1ClassFinder.Class;
+			}
+
+			Player2Class=nullptr;
+		}
+		else
+		{
+			Player1Class=nullptr;
+			
+			static ConstructorHelpers::FClassFinder<ACPP_CharacterPaul> Player2ClassFinder(TEXT("/Game/Kyoulee/BluePrints/MyCPP_CharacterPaul.MyCPP_CharacterPaul"));
+			if (Player2ClassFinder.Succeeded())
+			{
+				Player2Class = Player2ClassFinder.Class;
+			}
+
+		}
+	}
+	
 	//플레이어 A,B 스폰
 	if (this->Player1Class)
 	{
@@ -35,6 +84,7 @@ void AGameMode_MH::BeginPlay()
 
 		//mh
 		player1MaxHP = playerA->MaxHp;
+		player1HP = player1MaxHP;
 		//paul
 		playerANum = 1;
 	}
@@ -52,6 +102,7 @@ void AGameMode_MH::BeginPlay()
 
 		//mh
 		player2MaxHP = playerB->MaxHp;
+		player2HP = player2MaxHP;
 		//paul
 		playerBNum = 1;
 	}
@@ -67,6 +118,7 @@ void AGameMode_MH::BeginPlay()
 
 		//mh
 		player1MaxHP = playerA->MaxHp;
+		player1HP = player1MaxHP;
 		//Kazuya
 		playerANum = 2;
 	}
@@ -81,6 +133,7 @@ void AGameMode_MH::BeginPlay()
 
 		//mh
 		player2MaxHP = playerB->MaxHp;
+		player2HP = player2MaxHP;
 		//Kazuya
 		playerBNum = 2;
 	}
@@ -109,34 +162,9 @@ void AGameMode_MH::BeginPlay()
 		initPlayerBLoc = playerB->GetActorLocation();
 		initPlayerBRot = playerB->GetActorRotation();
 
-		//플레이어 인풋 막기 왜안돼는지 모르겟
-		//playerAController = playerA->GetController();
-		//playerBController = playerB->GetController();
-		//DisablePlayerInput();
-		if (playerA)
-		{
-			/*
-			GEngine->AddOnScreenDebugMessage(-2 , 5.f , FColor::Red , TEXT("!!!!!!!!!!!!!!!!!!!!!!!"));
-			//Cast<ACPP_CharacterPaul>(playerA)->SetDead(false);
-			UInputComponent* ControlA = playerA->FindComponentByClass<UInputComponent>();
-			if (ControlA)
-			{
-				ControlA->SetActive(false);
-			}
-			else
-			{
-				GEngine->AddOnScreenDebugMessage(-2 , 5.f , FColor::Red , TEXT("...................."));
-			}
-		}
-
-		if (playerB)
-		{
-			//PlayerBController = Cast<APlayerController>(playerB->GetController());
-		}*/
-		}
+		//플레이어 인풋 막기
+		DisablePlayerInput();
 	}
-	//라운드 스코어 초기화
-	InitRoundState();
 
 	StartGame();
 
@@ -194,15 +222,6 @@ void AGameMode_MH::HandleNewState(EGameState NewState)
 	switch (NewState)
 	{
 	case EGameState::GameStart:
-
-
-		//inputplayerController = GetWorld()->GetFirstPlayerController();
-		//if(inputplayerController)
-		//{
-		//	DisablePlayerInput();
-		//	GEngine->AddOnScreenDebugMessage(-11, 5.f , FColor::Red , TEXT("inputplayerController"));
-		//}
-
 		//라운드 시작
 		//라운드 초기화
 		//라운드 스코어 초기화
@@ -212,6 +231,7 @@ void AGameMode_MH::HandleNewState(EGameState NewState)
 	case EGameState::RoundStart:
 		//타이머,HP 초기화
 		ResetRoundState();
+
 	//플레이어 위치 초기화
 		if (playerA && playerB)
 		{
@@ -225,11 +245,18 @@ void AGameMode_MH::HandleNewState(EGameState NewState)
 			maincamera->SetActorLocation(initCameraLoc);
 			maincamera->SetActorRotation(initCameraRot);
 		}
-	//라운드 num 띄우기
-		inGameUI->ShowRoundText(++CurrentRoundNum);
+		if (PlayerInfoUI)
+		{
+			PlayerInfoUI->HiddenEndHP();
+		}
 
+	//라운드 num 띄우기
+		if (inGameUI)
+		{
+			inGameUI->ShowRoundText(++CurrentRoundNum);
+		}
 	//5초후 라운드 시작 //인풋 막아두기rl
-		GetWorld()->GetTimerManager().SetTimer(TimerHandle , this , &AGameMode_MH::RoundStart , 3.0f , false);
+		GetWorld()->GetTimerManager().SetTimer(TimerHandle , this , &AGameMode_MH::RoundStart , 2.25f , false);
 
 		GEngine->AddOnScreenDebugMessage(-5 , 5.f , FColor::Red , TEXT("RoundStart"));
 		break;
@@ -243,13 +270,27 @@ void AGameMode_MH::HandleNewState(EGameState NewState)
 
 	case EGameState::RoundEnd:
 
-
-		// 라운드 종료 처리
-		//HP가 0이 되었을 때 호출,
-		//타이머가 0 이 되었을 떄 호출
-		//타이머가 0이 된 경우에만 End HP 호출
-		//PlayerInfoUI->UpdateEndHP(player1HP,player2HP);	
-		//라운드 스코어 ++
+		if (inGameUI)
+		{
+			inGameUI->ShowTextVisibility(TEXT("can_TimeUp"));
+		}
+	//플레이어 인풋 막기
+		DisablePlayerInput();
+	// 라운드 종료 처리
+	//HP가 0이 되었을 때 호출,
+	//타이머가 0 이 되었을 떄 호출
+	//타이머가 0이 된 경우에만 End HP 호출
+		if (gameTimer <= 0)
+		{
+			// UI를 업데이트
+			if (PlayerInfoUI)
+			{
+				player1HP = playerA->Hp;
+				player2HP = playerB->Hp;
+				PlayerInfoUI->UpdateEndHP(player1HP , player2HP);
+			}
+		}
+	//라운드 스코어 ++
 		CheckRoundWinner();
 
 	//5초후 라운드 체크-> 다시시작 or 게임오버
@@ -259,8 +300,13 @@ void AGameMode_MH::HandleNewState(EGameState NewState)
 		break;
 
 	case EGameState::GameOver:
-		//게임 종료 처리
-		inGameUI->ShowGameOver();
+		if (PlayerInfoUI)
+		{
+			PlayerInfoUI->HiddenEndHP();
+		}
+		CheckFinalWinner();
+		
+	//게임 종료 처리
 	//승자 영상 출력
 		break;
 
@@ -287,8 +333,13 @@ void AGameMode_MH::SetGameStart()
 		if (playerA && playerB)
 		{
 			PlayerInfoUI = inGameUI->WBP_PlayerInfo;
+
 			PlayerInfoUI->SetPlayerinfo(playerA , playerB , playerANum , playerBNum);
 			PlayerInfoUI->InitRoundImages();
+			inGameUI->HideRoundText();
+
+			//라운드 스코어 초기화
+			InitRoundState();
 		}
 	}
 
@@ -297,7 +348,13 @@ void AGameMode_MH::SetGameStart()
 
 void AGameMode_MH::RoundStart()
 {
-	inGameUI->HideRoundText();
+	//플레이어 인풋 작동
+	EnablePlayerInput();
+	//hiddenEndHP 
+	if (inGameUI)
+	{
+		inGameUI->HideRoundText();
+	}
 	bStartRound = true;
 	SetGameState(EGameState::InProgress);
 }
@@ -364,9 +421,9 @@ void AGameMode_MH::UpdatePlayerHP(ACPP_Tekken8CharacterParent* Player , float Ne
 	}
 }
 
-void AGameMode_MH::UpdateTextVisibility(const FString& TextName, bool bVisible)
+void AGameMode_MH::UpdateTextVisibility(const FString& TextName , bool bVisible)
 {
-	if(inGameUI)
+	if (inGameUI)
 	{
 		inGameUI->ShowTextVisibility(TextName);
 	}
@@ -413,10 +470,26 @@ void AGameMode_MH::CheckFinalWinner()
 
 void AGameMode_MH::HandleRoundEnd(AActor* RoundWinner)
 {
+	//게임모드 확인 
+	//PvsP는 youWin(승리한 플레이어 영상 송출)
+	//PvsAI는 이겼는지, 졌는지 확인 이겼으면 이겼다 문구(플레이어 영상), 졌으면 졌다 문구(AI영상)
+
 	if (RoundWinner)
 	{
 		UE_LOG(LogTemp , Log , TEXT("Round Winner: %s") , *RoundWinner->GetName());
-		//애니메이션 송출
+
+		if(Player1Score==Player2Score)
+		{
+			inGameUI->ShowTextVisibility(TEXT("can_Draw"));
+		}
+		else if(RoundWinner==playerA)
+		{
+			//플레이어A 영상 송출
+		}
+		else
+		{
+			//플레이어B 영상 송출
+		}
 	}
 	else
 	{
@@ -426,44 +499,28 @@ void AGameMode_MH::HandleRoundEnd(AActor* RoundWinner)
 
 void AGameMode_MH::DisablePlayerInput()
 {
-	if (PlayerAController)
+	if (playerA)
 	{
-		PlayerAController->DisableInput(nullptr); // 또는 플레이어 A의 컨트롤러를 비활성화
-		GEngine->AddOnScreenDebugMessage(-10 , 5.f , FColor::Red , TEXT("Player A Input Disabled"));
+		playerA->bIsDead = true;
 	}
 
-	if (PlayerBController)
+	if (playerB)
 	{
-		PlayerBController->DisableInput(nullptr); // 또는 플레이어 B의 컨트롤러를 비활성화
-		GEngine->AddOnScreenDebugMessage(-11 , 5.f , FColor::Red , TEXT("Player B Input Disabled"));
+		playerB->bIsDead = true;
 	}
-	/*
-	if (inputplayerController)
-	{
-		inputplayerController->DisableInput(nullptr);
-		GEngine->AddOnScreenDebugMessage(-10 , 5.f , FColor::Red , TEXT("DisablePlayerInput"));
-	}*/
 }
 
 void AGameMode_MH::EnablePlayerInput()
 {
-	//if (PlayerAController)
-	//{
-	//PlayerAController->EnableInput(nullptr); // 또는 플레이어 A의 컨트롤러를 활성화
-	//GEngine->AddOnScreenDebugMessage(-12, 5.f, FColor::Green, TEXT("Player A Input Enabled"));
-	//}
-
-	//if (PlayerBController)
-	//{
-	//PlayerBController->EnableInput(nullptr); // 또는 플레이어 B의 컨트롤러를 활성화
-	//GEngine->AddOnScreenDebugMessage(-13, 5.f, FColor::Green, TEXT("Player B Input Enabled"));
-	//}
-	/*
-	if (inputplayerController)
+	if (playerA)
 	{
-		inputplayerController->EnableInput(nullptr);
-		GEngine->AddOnScreenDebugMessage(-10 , 5.f , FColor::Red , TEXT("EnablePlayerInput"));
-	}*/
+		playerA->bIsDead = false;
+	}
+
+	if (playerB)
+	{
+		playerB->bIsDead = false;
+	}
 }
 
 void AGameMode_MH::CheckPlayerHP()
@@ -519,6 +576,7 @@ void AGameMode_MH::InitRoundState()
 	CurrentRoundNum = initRoundNum;
 	Player1Score = 0;
 	Player2Score = 0;
+
 	Winner = nullptr;
 
 	ResetRoundState();

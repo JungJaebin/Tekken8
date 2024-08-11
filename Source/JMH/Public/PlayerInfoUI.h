@@ -112,6 +112,9 @@ public:
 	void UpdateEndHP(float playerAHP, float playerBHP);
 
 	UFUNCTION(BlueprintCallable, Category="UI")
+	void HiddenEndHP();
+
+	UFUNCTION(BlueprintCallable, Category="UI")
 	void RequestShakeEffect(float ShakeIntensity);
 
 	UFUNCTION(BlueprintCallable, Category="UI")
@@ -134,14 +137,10 @@ public:
 	//HPUI 애니메이션
 	UPROPERTY(meta = (BindWidgetAnim), Transient)
 	class UWidgetAnimation* HP_BShake;
-
+	
 	// 애니메이션을 호출하는 함수
 	UFUNCTION()
 	void PlayHPShakeAnim(int32 playernum);
-
-public:
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	//void UpdateShakeEffect(float Value);
-
+	
 	
 };

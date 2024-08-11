@@ -16,13 +16,17 @@ class JMH_API UMainGameInstance_MH : public UGameInstance
 
 public:
 	// 변수 선언
-	UPROPERTY(BlueprintReadWrite, Category = "Game Data")
-	int32 CharacterSelectionIndex; //1.paul,2.Kazuya
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Game Data")
+	int32 Player1CharacterIndex; //1.paul,2.Kazuya
 
-	UPROPERTY(BlueprintReadWrite, Category = "Game Data")
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Game Data")
+	int32 Player2CharacterIndex; //1.paul,2.Kazuya
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Game Data")
 	int32 GameModeSelectionIndex; //1.PvsP,2.PvsCPU
 
-	UPROPERTY(BlueprintReadWrite, Category = "Game Data")
-	bool IsPlayerOnLeftSide;//true.Left,false.Right 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Game Data")
+	bool IsPlayerOnLeftSide;//true.Left,false.Right
+	
 	
 };
