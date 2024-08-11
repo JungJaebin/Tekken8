@@ -1216,7 +1216,6 @@ void ACPP_CharacterPaul::CommandBullA ( )
 
 	SetActtacInfoSkell ( EDamagePointInteraction::Middle , 13 , 15 , 20, -8 , 42 , -5 , 42 );
 
-
 	sAttackInfo.skellEffectLocation = this->RelativePointVector ( 80 , -5 , 10 ) + this->GetActorLocation ( );
 	sAttackInfo.KnockBackDirection = this->RelativePointVector ( 100 , 0 , 400 );
 
@@ -1228,9 +1227,8 @@ void ACPP_CharacterPaul::CommandBullA ( )
 
 	this->SetToRelativeLocationFrame ( FVector ( 10 , 0 , 0 ) , 3 );
 
-
 	// 애니매이션 실행 부분
-	PlayMontageFrameSystem ( uMtgSitSpineKick );
+	PlayMontageFrameSystem ( uMtgBullA );
 
 	// 사운드 추가
 	sAttackInfo.uMovementSound = this->uSoundHitRightHand;
@@ -1245,7 +1243,6 @@ float ACPP_CharacterPaul::GetZValue ( )
 	
 	FHitResult data;
 
-	// 
 	bool hit = GetWorld()->LineTraceSingleByChannel(data,this->GetActorLocation(), FVector::UpVector * -1000, ECollisionChannel::ECC_Visibility );
 	if (hit)
 		return data.Distance;

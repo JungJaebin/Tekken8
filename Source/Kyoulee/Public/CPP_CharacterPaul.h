@@ -203,6 +203,24 @@ public:
 	class UAnimMontage* uMtgIdleHit;
 	UPROPERTY(EditDefaultsOnly, Category="MontageList" )
 	class UAnimMontage* uMtgSitHit;
+	
+	// Skell
+	UPROPERTY(EditDefaultsOnly, Category="MontageList" )
+	class UAnimMontage* uMtgBullA;
+	UPROPERTY(EditDefaultsOnly, Category="MontageList" )
+	class UAnimMontage* uMtgLeftTiger;
+	UPROPERTY(EditDefaultsOnly, Category="MontageList" )
+	class UAnimMontage* uMtgBackJilPung;
+	UPROPERTY(EditDefaultsOnly, Category="MontageList" )
+	class UAnimMontage* uMtgSangBong1;
+	UPROPERTY(EditDefaultsOnly, Category="MontageList" )
+	class UAnimMontage* uMtgSangBong2;
+	UPROPERTY(EditDefaultsOnly, Category="MontageList" )
+	class UAnimMontage* uMtgLuOu1;
+	UPROPERTY(EditDefaultsOnly, Category="MontageList" )
+	class UAnimMontage* uMtgLuOu2;
+	UPROPERTY(EditDefaultsOnly, Category="MontageList" )
+	class UAnimMontage* uMtgLuOu3;
 
 	/**
 	 * @title Camera Effect
