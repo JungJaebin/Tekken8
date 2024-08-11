@@ -208,7 +208,7 @@ AAICharacter::AAICharacter()
 
 	FAttackInfoInteraction attackRHMiddle;
 	attackRHMiddle.KnockBackDirection = FVector ( 200.f , 0.f , 00.f ); //-0.5 보다 적게 예상 3*
-	attackRHMiddle.KnockBackFallingDirection = FVector ( 300.f , 0.f , 50.f ); // 맞았을때
+	attackRHMiddle.KnockBackFallingDirection = FVector ( 1300.f , 0.f , 50.f ); // 맞았을때
 	attackRHMiddle.DamageAmount = 23;
 	attackRHMiddle.DamagePoint = EDamagePointInteraction::Middle;
 	attackRHMiddle.HitFrame = 20; //HitFrame
@@ -255,6 +255,48 @@ AAICharacter::AAICharacter()
 	if ( NE.Succeeded ( ) )
 	{
 		niagaraFXSystem = NE.Object;
+	}
+
+	//사운드
+	ConstructorHelpers::FObjectFinder<USoundBase> attackLFSFVFinder ( TEXT ( "/Script/Engine.SoundWave'/Game/LSJ/Sound/AttackLF.AttackLF'" ) );
+	if ( attackLFSFVFinder.Succeeded ( ) )
+	{
+		attackLFSFV = attackLFSFVFinder.Object;
+	}
+	ConstructorHelpers::FObjectFinder<USoundBase> attackLHSFVFinder ( TEXT ( "/Script/Engine.SoundWave'/Game/LSJ/Sound/AttackLH.AttackLH'" ) );
+	if ( attackLHSFVFinder.Succeeded ( ) )
+	{
+		attackLHSFV = attackLHSFVFinder.Object;
+	}
+	ConstructorHelpers::FObjectFinder<USoundBase> attackRFSFVFinder ( TEXT ( "/Script/Engine.SoundWave'/Game/LSJ/Sound/AttackRF.AttackRF'" ) );
+	if ( attackRFSFVFinder.Succeeded ( ) )
+	{
+		attackRFSFV = attackRFSFVFinder.Object;
+	}
+	ConstructorHelpers::FObjectFinder<USoundBase> attackRHSFVFinder ( TEXT ( "/Script/Engine.SoundWave'/Game/LSJ/Sound/AttackRH.AttackRH'" ) );
+	if ( attackRHSFVFinder.Succeeded ( ) )
+	{
+		attackRHSFV = attackRHSFVFinder.Object;
+	}
+	ConstructorHelpers::FObjectFinder<USoundBase> guardSFVFinder ( TEXT ( "/Script/Engine.SoundWave'/Game/LSJ/Sound/Guard.Guard'" ) );
+	if ( guardSFVFinder.Succeeded ( ) )
+	{
+		guardSFV = guardSFVFinder.Object;
+	}
+	ConstructorHelpers::FObjectFinder<USoundBase> hitLastSFVFinder ( TEXT ( "/Script/Engine.SoundWave'/Game/LSJ/Sound/HitLast.HitLast'" ) );
+	if ( hitLastSFVFinder.Succeeded ( ) )
+	{
+		hitLastSFV = hitLastSFVFinder.Object;
+	}
+	ConstructorHelpers::FObjectFinder<USoundBase> hitStrongSFVFinder ( TEXT ( "/Script/Engine.SoundWave'/Game/LSJ/Sound/HitStrong.HitStrong'" ) );
+	if ( hitStrongSFVFinder.Succeeded ( ) )
+	{
+		hitStrongSFV = hitStrongSFVFinder.Object;
+	}
+	ConstructorHelpers::FObjectFinder<USoundBase> hitWeakSFVFinder ( TEXT ( "/Script/Engine.SoundWave'/Game/LSJ/Sound/HitWeak.HitWeak'" ) );
+	if ( hitWeakSFVFinder.Succeeded ( ) )
+	{
+		hitWeakSFV = hitWeakSFVFinder.Object;
 	}
 	//중력적용
 	//GetCharacterMovement()->bApplyGravityWhileJumping = true;
@@ -318,6 +360,8 @@ void AAICharacter::BeginPlay()
 	{
 		if(stateAttackLF->attackInfoArray.IsValidIndex ( 0 ))
 			stateAttackLF->attackInfoArray[0].hitMontage=animInstance->hitLowerRFMontage;
+		if ( stateAttackRH->attackInfoArray.IsValidIndex ( 0 ) )
+			stateAttackRH->attackInfoArray[0].hitMontage = animInstance->hitFallingRHMontage;
 		//animInstance->OnMontageEnded.AddDynamic ( this , &AAICharacter::HandleOnMontageEnded );
 	}
 	
@@ -353,104 +397,58 @@ void AAICharacter::BeginPlay()
 	}
 	blackboardComp = aiController->GetBlackboardComponent ( );
 	check ( blackboardComp );
+
+	gameMode = Cast<AGameMode_MH> ( UGameplayStatics::GetGameMode ( GetWorld ( ) ) );
 }
 
-void AAICharacter::PauseAI ( )
-{
-	if ( isPause )
-		return;
-
-
-	if  (aiController->BrainComponent)
-	{
-		//중지
-		//서있고 멈춰있는거
-
-		//게임시작
-		//캐릭터가 죽거나 시간제한이 걸렸을때
-
-		AGameMode_MH*  gameMode = Cast<AGameMode_MH>(UGameplayStatics::GetGameMode ( GetWorld ( ) ));
-		if ( gameMode->CurrentState == EGameState::GameStart )
-		{
-			blackboardComp->SetValueAsBool ( TEXT ( "IsStart"), false );
-		}
-		if ( Hp >= MaxHp )
-		{
-
-		}
-
-		Hp = 1;
-		
-		currentState = stateIdle;
-		isPause = true;
-		isResume = false;
-		//적을 날리는 공격
-		//적이 하단 공격
-	}
-}
-void AAICharacter::ResumeAI ( )
-{
-	//라운드 시작 n초뒤 한번
-	if ( aiController->BrainComponent )
-	{
-		animInstance->StopAllMontages ( 0.0f );
-		animInstance->InitializeAnimation ( );
-		animInstance->bDie = false;
-
-		blackboardComp->SetValueAsBool ( TEXT ( "IsStart" ) , true );
-		blackboardComp->SetValueAsBool (TEXT("IsHitFalling"),false );
-		blackboardComp->SetValueAsBool ( TEXT ( "IsHit" ) , false );
-		blackboardComp->SetValueAsBool ( TEXT ( "IsBound" ) , false );
-		isResume = true;
-		isPause = false;
-	}
-}
 void AAICharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	AGameMode_MH* gameMode = Cast<AGameMode_MH> ( UGameplayStatics::GetGameMode ( GetWorld ( ) ) );
-
-	if ( gameMode->CurrentState == EGameState::RoundStart && !isPause )
+	if ( gameMode )
 	{
-		//서있게
-		ExitCurrentState ( ECharacterStateInteraction::Idle );
-		SetStateIdle ( );
-		blackboardComp->SetValueAsBool ( TEXT ( "IsStart" ) , false );
-		animInstance->StopAllMontages ( 0.0f );
-		animInstance->InitializeAnimation ( );
-		animInstance->bDie = false;
+		if ( gameMode->CurrentState == EGameState::RoundStart && !isPause )
+		{
+			//서있게
+			ExitCurrentState ( ECharacterStateInteraction::Idle );
+			SetStateIdle ( );
+			blackboardComp->SetValueAsBool ( TEXT ( "IsStart" ) , false );
+			animInstance->StopAllMontages ( 0.0f );
+			animInstance->InitializeAnimation ( );
+			animInstance->bDie = false;
 
-		blackboardComp->SetValueAsBool ( TEXT ( "IsStart" ) , false );
-		blackboardComp->SetValueAsBool ( TEXT ( "IsHitFalling" ) , false );
-		blackboardComp->SetValueAsBool ( TEXT ( "IsHit" ) , false );
-		blackboardComp->SetValueAsBool ( TEXT ( "IsBound" ) , false );
-		isPause = true;
-	}
-	else if ( gameMode->CurrentState == EGameState::InProgress && isPause )
-	{
-		//움직이게
-		ExitCurrentState ( ECharacterStateInteraction::Idle );
-		SetStateIdle ( );
-		blackboardComp->SetValueAsBool ( TEXT ( "IsStart" ) , false );
-		animInstance->StopAllMontages ( 0.0f );
-		animInstance->InitializeAnimation ( );
-		animInstance->bDie = false;
+			blackboardComp->SetValueAsBool ( TEXT ( "IsStart" ) , false );
+			blackboardComp->SetValueAsBool ( TEXT ( "IsHitFalling" ) , false );
+			blackboardComp->SetValueAsBool ( TEXT ( "IsHit" ) , false );
+			blackboardComp->SetValueAsBool ( TEXT ( "IsBound" ) , false );
+			isPause = true;
+		}
+		else if ( gameMode->CurrentState == EGameState::InProgress && isPause )
+		{
+			//움직이게
+			ExitCurrentState ( ECharacterStateInteraction::Idle );
+			SetStateIdle ( );
+			blackboardComp->SetValueAsBool ( TEXT ( "IsStart" ) , false );
+			animInstance->StopAllMontages ( 0.0f );
+			animInstance->InitializeAnimation ( );
+			animInstance->bDie = false;
 
-		blackboardComp->SetValueAsBool ( TEXT ( "IsStart" ) , false );
-		blackboardComp->SetValueAsBool ( TEXT ( "IsHitFalling" ) , false );
-		blackboardComp->SetValueAsBool ( TEXT ( "IsHit" ) , false );
-		blackboardComp->SetValueAsBool ( TEXT ( "IsBound" ) , false );
-		blackboardComp->SetValueAsBool ( TEXT ( "IsStart" ) , true );
-		isPause = false;
+			blackboardComp->SetValueAsBool ( TEXT ( "IsStart" ) , false );
+			blackboardComp->SetValueAsBool ( TEXT ( "IsHitFalling" ) , false );
+			blackboardComp->SetValueAsBool ( TEXT ( "IsHit" ) , false );
+			blackboardComp->SetValueAsBool ( TEXT ( "IsBound" ) , false );
+			blackboardComp->SetValueAsBool ( TEXT ( "IsStart" ) , true );
+			isPause = false;
+		}
+		else if ( bIsDead )
+		{
+			//멈추게
+			ExitCurrentState ( ECharacterStateInteraction::Idle );
+			SetStateIdle ( );
+			blackboardComp->SetValueAsBool ( TEXT ( "IsStart" ) , false );
+			bIsDead = false;
+		}
 	}
-	else if(bIsDead)
-	{
-		//멈추게
-		ExitCurrentState ( ECharacterStateInteraction::Idle );
-		SetStateIdle ( );
-		blackboardComp->SetValueAsBool ( TEXT ( "IsStart" ) , false );
-		bIsDead = false;
-	}
+	
 	//if ( bIsDead )
 	//{
 	//	PauseAI ( ); 
@@ -609,7 +607,8 @@ int8 AAICharacter::ChangeAttackMotionDependingOpponentState ( )
 		//스탠드 상태일때 랜덤 공격
 		//randomAttackIndex = FMath::RandRange ( 1 , 3 );
 	}
-
+	//test
+	randomAttackIndex = 2;
 	return randomAttackIndex;
 }
 
@@ -651,9 +650,13 @@ void AAICharacter::OnAttackCollisionLF ( )
 			if ( hitActor->IsA<ACPP_Tekken8CharacterParent> ( ) )
 			{
 				ACPP_Tekken8CharacterParent* hitCharacter = Cast<ACPP_Tekken8CharacterParent> ( hitActor );
-				//공격 결과 blackboardComp에 넣기 
-				blackboardComp->SetValueAsEnum ( TEXT ( "EAttackResult" ) , 0 ); //0 : hit - EAttackResult
-
+			
+				if ( currentState->GetAttackCount ( ) == 0 )
+				{
+					//사운드
+					UGameplayStatics::PlaySound2D ( GetWorld ( ) , attackLFSFV );
+				}
+			
 				hitInfo.skellEffectLocation = sphereSpawnLocation;
 				//공격 결과 blackboardComp에 넣기 
 				blackboardComp->SetValueAsEnum ( TEXT ( "EAttackResult" ) , aOpponentPlayer->HitDecision ( hitInfo , this ) ? 1 : 0 ); //0 : hit - EAttackResult
@@ -692,8 +695,9 @@ void AAICharacter::OnAttackCollisionRF ( )
 			if ( hitActor->IsA<ACPP_Tekken8CharacterParent> ( ) )
 			{
 				ACPP_Tekken8CharacterParent* hitCharacter = Cast<ACPP_Tekken8CharacterParent> ( hitActor );
-				//공격 결과 blackboardComp에 넣기 
-				blackboardComp->SetValueAsEnum ( TEXT ( "EAttackResult" ) , 0 ); //0 : hit - EAttackResult
+				if ( currentState->GetAttackCount ( ) == 0 )
+					//사운드
+					UGameplayStatics::PlaySound2D ( GetWorld ( ) , attackRFSFV );
 
 				hitInfo.skellEffectLocation = sphereSpawnLocation;
 				//공격 결과 blackboardComp에 넣기 
@@ -734,8 +738,9 @@ void AAICharacter::OnAttackCollisionLH ( )
 			if ( hitActor->IsA<ACPP_Tekken8CharacterParent> ( ) )
 			{
 				ACPP_Tekken8CharacterParent* hitCharacter = Cast<ACPP_Tekken8CharacterParent> ( hitActor );
-				//공격 결과 blackboardComp에 넣기 
-				blackboardComp->SetValueAsEnum ( TEXT ( "EAttackResult" ) , 0 ); //0 : hit - EAttackResult
+				if ( currentState->GetAttackCount ( ) == 0 )
+					//사운드
+					UGameplayStatics::PlaySound2D ( GetWorld ( ) , attackLHSFV );
 
 				hitInfo.skellEffectLocation = sphereSpawnLocation;
 				//공격 결과 blackboardComp에 넣기 
@@ -775,10 +780,12 @@ void AAICharacter::OnAttackCollisionRH ( )
 			if ( hitActor->IsA<ACPP_Tekken8CharacterParent> ( ) )
 			{
 				ACPP_Tekken8CharacterParent* hitCharacter = Cast<ACPP_Tekken8CharacterParent> ( hitActor );
-				//공격 결과 blackboardComp에 넣기 
-				blackboardComp->SetValueAsEnum ( TEXT ( "EAttackResult" ) , 0 ); //0 : hit - EAttackResult
+				if ( currentState->GetAttackCount ( ) == 0 )
+					//사운드
+					UGameplayStatics::PlaySound2D ( GetWorld ( ) , attackRHSFV );
 
 				hitInfo.skellEffectLocation = sphereSpawnLocation;
+				hitInfo.KnockBackDirection = FVector (1000,0,1000);
 				//공격 결과 blackboardComp에 넣기 
 				blackboardComp->SetValueAsEnum ( TEXT ( "EAttackResult" ) , aOpponentPlayer->HitDecision ( hitInfo , this ) ? 1 : 0 ); //0 : hit - EAttackResult
 
@@ -966,11 +973,14 @@ bool AAICharacter::HitDecision ( FAttackInfoInteraction attackInfo , ACPP_Tekken
 		
 		Hp = FMath::Clamp(Hp-attackInfo.DamageAmount,0.0f,MaxHp);
 
-		AGameMode_MH* gameMode = Cast<AGameMode_MH>(GetWorld()->GetAuthGameMode());
+		gameMode = Cast<AGameMode_MH>(GetWorld()->GetAuthGameMode());
 		if( gameMode )
 			gameMode->UpdatePlayerHP(this,Hp);
 		// 확대할 위치 , 줌 정도 0.5 기본 , 흔들림정도 , 흔들림 시간
 		aMainCamera->RequestZoomEffect ( GetActorLocation ( ) , 0.5f , 10.0f , 0.3f );
+
+		//사운드
+		UGameplayStatics::PlaySound2D ( GetWorld ( ) , hitWeakSFV );
 		if ( currentState == stateKnockDown && stateKnockDown->isKnockDown )
 		{
 			//공격 받을 때 지연 프레임을 받아서 HitFalling 상태에 전달하고

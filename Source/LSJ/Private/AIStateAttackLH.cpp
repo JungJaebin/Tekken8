@@ -6,6 +6,7 @@
 #include "CPP_CharacterPaul.h"
 #include "AICharacter.h"
 #include "Components/SphereComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 
 
@@ -17,7 +18,8 @@ void UAIStateAttackLH::Enter ( UAICharacterAnimInstance* pAnimInstance )
 	startLocation = owner->GetMesh ( )->GetBoneLocation ( (TEXT ( "head" )) );
 	//공격거리 head 기준 174.0f RH
 	//공격거리 head 기준 92.0f LH
-
+	//사운드
+	//UGameplayStatics::PlaySound2D ( GetWorld ( ) , owner->attackLHSFV , 0.5f );
 	animInstace->PlayeAttackLHMontage ( );
 
 	owner->GetCurrentMontage ( )->GetSectionStartAndEndTime ( 0 , startFrame , endFrame );

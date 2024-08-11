@@ -94,14 +94,32 @@ public:
 	class UBoxComponent* collisionLower;
 	//UPROPERTY ( EditDefaultsOnly )
 	//class UCapsuleComponent* collisionBody;
+
+	
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 	bool isResume;
 	bool isPause;
-	void PauseAI ( );
-	void ResumeAI ( );
+	AGameMode_MH* gameMode;
 public:
+	//사운드
+	UPROPERTY(EditDefaultsOnly)
+	class USoundBase* attackLFSFV;
+		UPROPERTY(EditDefaultsOnly)
+	class USoundBase* attackRFSFV;
+		UPROPERTY(EditDefaultsOnly)
+	class USoundBase* attackLHSFV;
+		UPROPERTY(EditDefaultsOnly)
+	class USoundBase* attackRHSFV;
+		UPROPERTY(EditDefaultsOnly)
+	class USoundBase* guardSFV;
+		UPROPERTY(EditDefaultsOnly)
+	class USoundBase* hitLastSFV;
+		UPROPERTY(EditDefaultsOnly)
+	class USoundBase* hitStrongSFV;
+			UPROPERTY(EditDefaultsOnly)
+	class USoundBase* hitWeakSFV;
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 	// Called to bind functionality to input

@@ -16,6 +16,7 @@ class LSJ_API UAICharacterAnimInstance : public UAnimInstance
 	GENERATED_BODY()
 				UPROPERTY(EditAnyWhere , BlueprintReadOnly, Category = Move, Meta = (AllowPrivateAccess = true))
 	UAnimMontage* attackLowerLFMontage;
+
 			UPROPERTY(EditAnyWhere , BlueprintReadOnly, Category = Move, Meta = (AllowPrivateAccess = true))
 	UAnimMontage* crossWalkClockwiseMontage;
 				UPROPERTY(EditAnyWhere , BlueprintReadOnly, Category = Move, Meta = (AllowPrivateAccess = true))
@@ -60,6 +61,8 @@ protected:
 
 public:
 	virtual void PlayMontageAtFrameRate ( UAnimMontage* montage , int32 nFrames , float frameRate );
+	UPROPERTY(EditAnyWhere , BlueprintReadOnly, Category = Move, Meta = (AllowPrivateAccess = true))
+	UAnimMontage* hitFallingRHMontage;
 	UPROPERTY ( EditAnyWhere , BlueprintReadOnly , Category = Move )
 	UAnimMontage* hitKnockDownMontage;
 	UPROPERTY ( EditAnyWhere , BlueprintReadOnly , Category = Move )
