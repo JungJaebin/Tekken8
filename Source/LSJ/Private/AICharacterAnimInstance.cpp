@@ -273,7 +273,7 @@ void UAICharacterAnimInstance::HandleOnMontageEnded ( UAnimMontage* Montage , bo
         }
          else
         {
-            owner->ExitCurrentState ( ECharacterStateInteraction::AttackLower );
+           owner->ExitCurrentState ( ECharacterStateInteraction::AttackLower );
         }
     }
 }

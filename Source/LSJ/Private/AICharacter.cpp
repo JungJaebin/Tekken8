@@ -28,7 +28,7 @@
 #include "AIStateAttackLH.h"
 #include "AIStateKnockDown.h"
 #include "BrainComponent.h"
-
+#include "GameMode_MH.h"
 
 // Sets default values
 AAICharacter::AAICharacter()
@@ -266,21 +266,32 @@ AAICharacter::AAICharacter()
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 }
 
-void AAICharacter::StartMove ( )
+void AAICharacter::StartPlayer ( )
 {
-	check ( aiController );
-	//카메라 좌측인지 오른쪽인지 체크
-	float cameraDirection = FVector::DotProduct ( UGameplayStatics::GetPlayerPawn ( GetWorld ( ) , 0 )->GetActorRightVector ( ) , GetActorLocation ( ) );
-	if ( cameraDirection > 0 )
+	if ( aiController->BrainComponent )
 	{
-		aiController->SetBehaviorTree ( 1 );
+		//중지
+		//서있고 멈춰있는거
+
+		//게임시작
+		//캐릭터가 죽거나 시간제한이 걸렸을때
+		blackboardComp->SetValueAsBool ( TEXT ( "IsStart" ) , false );
+
 	}
-	else
-	{
-		aiController->SetBehaviorTree ( 2 );
-	}
-	blackboardComp = aiController->GetBlackboardComponent ( );
-	check ( blackboardComp );
+}
+
+void AAICharacter::EndPlayer ( )
+{
+	animInstance->StopAllMontages ( 0.0f );
+	animInstance->InitializeAnimation ( );
+	animInstance->bDie = false;
+
+	blackboardComp->SetValueAsBool ( TEXT ( "IsStart" ) , true );
+	blackboardComp->SetValueAsBool ( TEXT ( "IsHitFalling" ) , false );
+	blackboardComp->SetValueAsBool ( TEXT ( "IsHit" ) , false );
+	blackboardComp->SetValueAsBool ( TEXT ( "IsBound" ) , false );
+	isResume = true;
+	isPause = false;
 }
 
 void AAICharacter::SetAttackInfoOwnerOpposite ( FAttackInfoInteraction& attackInfo )
@@ -348,21 +359,48 @@ void AAICharacter::PauseAI ( )
 {
 	if ( isPause )
 		return;
+
+
 	if  (aiController->BrainComponent)
 	{
-		aiController->BrainComponent->StopLogic ( TEXT ( "Pause AI" ) );
+		//중지
+		//서있고 멈춰있는거
+
+		//게임시작
+		//캐릭터가 죽거나 시간제한이 걸렸을때
+
+		AGameMode_MH*  gameMode = Cast<AGameMode_MH>(UGameplayStatics::GetGameMode ( GetWorld ( ) ));
+		if ( gameMode->CurrentState == EGameState::GameStart )
+		{
+			blackboardComp->SetValueAsBool ( TEXT ( "IsStart"), false );
+		}
+		if ( Hp >= MaxHp )
+		{
+
+		}
+
+		Hp = 1;
+		
+		currentState = stateIdle;
 		isPause = true;
 		isResume = false;
+		//적을 날리는 공격
+		//적이 하단 공격
 	}
 }
 void AAICharacter::ResumeAI ( )
 {
-	if ( isResume )
-		return;
+	//라운드 시작 n초뒤 한번
 	if ( aiController->BrainComponent )
 	{
+		animInstance->StopAllMontages ( 0.0f );
 		animInstance->InitializeAnimation ( );
-		aiController->BrainComponent->RestartLogic ( );
+		animInstance->bDie = false;
+
+		blackboardComp->SetValueAsBool ( TEXT ( "IsStart" ) , true );
+		blackboardComp->SetValueAsBool (TEXT("IsHitFalling"),false );
+		blackboardComp->SetValueAsBool ( TEXT ( "IsHit" ) , false );
+		blackboardComp->SetValueAsBool ( TEXT ( "IsBound" ) , false );
 		isResume = true;
 		isPause = false;
 	}
@@ -370,14 +408,60 @@ void AAICharacter::ResumeAI ( )
 void AAICharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	if ( bIsDead )
+	AGameMode_MH* gameMode = Cast<AGameMode_MH> ( UGameplayStatics::GetGameMode ( GetWorld ( ) ) );
+
+	if ( gameMode->CurrentState == EGameState::RoundStart && !isPause )
 	{
-		PauseAI ( );
+		//서있게
+		ExitCurrentState ( ECharacterStateInteraction::Idle );
+		SetStateIdle ( );
+		blackboardComp->SetValueAsBool ( TEXT ( "IsStart" ) , false );
+		animInstance->StopAllMontages ( 0.0f );
+		animInstance->InitializeAnimation ( );
+		animInstance->bDie = false;
+
+		blackboardComp->SetValueAsBool ( TEXT ( "IsStart" ) , false );
+		blackboardComp->SetValueAsBool ( TEXT ( "IsHitFalling" ) , false );
+		blackboardComp->SetValueAsBool ( TEXT ( "IsHit" ) , false );
+		blackboardComp->SetValueAsBool ( TEXT ( "IsBound" ) , false );
+		isPause = true;
 	}
-	else
+	else if ( gameMode->CurrentState == EGameState::InProgress && isPause )
 	{
-		ResumeAI ( );
+		//움직이게
+		ExitCurrentState ( ECharacterStateInteraction::Idle );
+		SetStateIdle ( );
+		blackboardComp->SetValueAsBool ( TEXT ( "IsStart" ) , false );
+		animInstance->StopAllMontages ( 0.0f );
+		animInstance->InitializeAnimation ( );
+		animInstance->bDie = false;
+
+		blackboardComp->SetValueAsBool ( TEXT ( "IsStart" ) , false );
+		blackboardComp->SetValueAsBool ( TEXT ( "IsHitFalling" ) , false );
+		blackboardComp->SetValueAsBool ( TEXT ( "IsHit" ) , false );
+		blackboardComp->SetValueAsBool ( TEXT ( "IsBound" ) , false );
+		blackboardComp->SetValueAsBool ( TEXT ( "IsStart" ) , true );
+		isPause = false;
 	}
+	else if(bIsDead)
+	{
+		//멈추게
+		ExitCurrentState ( ECharacterStateInteraction::Idle );
+		SetStateIdle ( );
+		blackboardComp->SetValueAsBool ( TEXT ( "IsStart" ) , false );
+		bIsDead = false;
+	}
+	//if ( bIsDead )
+	//{
+	//	PauseAI ( ); 
+	//	//최소 한번
+	//	//라운드 끝에 한번
+	//}
+	//else
+	//{
+	//	ResumeAI ( );
+	//	//라운드 시작 n초뒤 한번
+	//}
 
 
 
@@ -547,6 +631,8 @@ void AAICharacter::SetStateIdle ( )
 
 void AAICharacter::OnAttackCollisionLF ( )
 {
+	if ( IsAttacked || currentState == stateIdle )
+		return;
 	//collisionLF->SetCollisionEnabled ( ECollisionEnabled::QueryOnly);
 	float radius = 40.0f;
 	TArray<TEnumAsByte<EObjectTypeQuery>> traceObjectTypes;
@@ -586,6 +672,8 @@ void AAICharacter::OnAttackCollisionLF ( )
 
 void AAICharacter::OnAttackCollisionRF ( )
 {
+	if ( IsAttacked || currentState == stateIdle )
+		return;
 	//collisionRF->SetCollisionEnabled ( ECollisionEnabled::QueryOnly );
 	float radius = 20.0f;
 	TArray<TEnumAsByte<EObjectTypeQuery>> traceObjectTypes;
@@ -625,6 +713,8 @@ void AAICharacter::OnAttackCollisionRF ( )
 
 void AAICharacter::OnAttackCollisionLH ( )
 {
+	if ( IsAttacked || currentState == stateIdle )
+		return;
 	//collisionLH->SetCollisionEnabled ( ECollisionEnabled::QueryOnly );
 
 	float radius = 20.0f;
@@ -665,6 +755,8 @@ void AAICharacter::OnAttackCollisionLH ( )
 
 void AAICharacter::OnAttackCollisionRH ( )
 {
+	if ( IsAttacked || currentState == stateIdle)
+		return;
 	//collisionRH->SetCollisionEnabled ( ECollisionEnabled::QueryOnly );
 	float radius = 20.0f;
 	TArray<TEnumAsByte<EObjectTypeQuery>> traceObjectTypes;
@@ -676,7 +768,7 @@ void AAICharacter::OnAttackCollisionRH ( )
 	UClass* seekClass = ACPP_Tekken8CharacterParent::StaticClass ( );
 	bool hit = UKismetSystemLibrary::SphereOverlapActors ( GetWorld ( ) , sphereSpawnLocation , radius , traceObjectTypes , seekClass , ignoreActors , outActors );;
 	FAttackInfoInteraction hitInfo = SendAttackInfo ( );
-	if ( hit )
+	if ( hit  )
 	{
 		for ( AActor* hitActor : outActors )
 		{
@@ -705,28 +797,28 @@ void AAICharacter::OnAttackCollisionRH ( )
 void AAICharacter::OffAttackCollisionLF ( )
 {
 	collisionLF->SetCollisionEnabled ( ECollisionEnabled::NoCollision );
-	currentState->AddAttackCount ( 1 );
+	//currentState->AddAttackCount ( 1 );
 	IsAttacked = false;
 }
 
 void AAICharacter::OffAttackCollisionRF ( )
 {
 	collisionRF->SetCollisionEnabled ( ECollisionEnabled::NoCollision );
-	currentState->AddAttackCount ( 1 );
+	//currentState->AddAttackCount ( 1 );
 	IsAttacked = false;
 }
 
 void AAICharacter::OffAttackCollisionLH ( )
 {
 	collisionLH->SetCollisionEnabled ( ECollisionEnabled::NoCollision );
-	currentState->AddAttackCount ( 1 );
+	//currentState->AddAttackCount ( 1 );
 	IsAttacked = false;
 }
 
 void AAICharacter::OffAttackCollisionRH ( )
 {
 	collisionRH->SetCollisionEnabled ( ECollisionEnabled::NoCollision );
-	currentState->AddAttackCount(1);
+	//currentState->AddAttackCount(1);
 	//GEngine->AddOnScreenDebugMessage ( -1 , 1.f , FColor::Red , FString::Printf ( TEXT ( "OffAttackCollisionRH : %f " ) , FVector::Dist(GetMesh()->GetBoneLocation ((TEXT("head"))), collisionRH->GetComponentLocation())));
 	IsAttacked = false;
 }
