@@ -12,6 +12,7 @@
 #include "GameMode_MH.h"
 #include "../Plugins/FX/Niagara/Source/Niagara/Public/NiagaraFunctionLibrary.h"
 #include "CPP_PualAnimInstance.h"
+#include "Components/BoxComponent.h"
 
 // Sets default values
 ACPP_CharacterPaul::ACPP_CharacterPaul ( )
@@ -28,6 +29,20 @@ ACPP_CharacterPaul::ACPP_CharacterPaul ( )
 	uCharacterMesh->SetRelativeRotation ( FRotator ( 0 , 0 , -90 ) );
 	uCharacterMesh->SetWorldScale3D(FVector(0.1,0.1,0.1));
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
+
+	collisionTop = CreateDefaultSubobject<UBoxComponent> ( TEXT ( "collisionTop" ) );
+	collisionTop->SetupAttachment ( GetMesh ( ) , TEXT ( "head" ) );
+	collisionMiddle = CreateDefaultSubobject<UBoxComponent> ( TEXT ( "collisionMiddle" ) );
+	collisionMiddle->SetupAttachment ( GetMesh ( ) , TEXT ( "spine_01" ) );
+	collisionLower = CreateDefaultSubobject<UBoxComponent> ( TEXT ( "collisionLower" ) );
+	collisionLower->SetupAttachment ( GetMesh ( ) , TEXT ( "pelvis" ) );
+	collisionTop->SetBoxExtent ( FVector ( 311.232643 , 166.634513 , 240.066655 ) );
+	collisionMiddle->SetBoxExtent ( (FVector ( 311.232643 , 315.176916 , 264.956523 )) );
+	collisionMiddle->SetUsingAbsoluteRotation ( true );
+	collisionMiddle->SetRelativeLocation ( FVector ( 0 , 0 , 99.999999 ) );
+	collisionLower->SetBoxExtent ( FVector ( 319.717793 , 321.694333 , 336.888169 ) );
+	collisionLower->SetUsingAbsoluteRotation ( true );
+	collisionLower->SetRelativeLocation ( FVector ( 0.092165 , 531.000000 , 117.000000 ) );
 }
 // Called when the game starts or when spawned
 void ACPP_CharacterPaul::BeginPlay ( )

@@ -303,4 +303,14 @@ public:
  *
  */
 	virtual bool HitDecision ( FAttackInfoInteraction attackInfo , ACPP_Tekken8CharacterParent* ownerHitPlayer ) override;
+
+
+
+
+	UPROPERTY ( EditDefaultsOnly )
+	class UBoxComponent* collisionTop;
+	UPROPERTY ( EditDefaultsOnly )
+	class UBoxComponent* collisionMiddle;
+	UPROPERTY ( EditDefaultsOnly )
+	class UBoxComponent* collisionLower;
 };	            
