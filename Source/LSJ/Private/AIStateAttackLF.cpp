@@ -5,13 +5,16 @@
 #include "Components/SphereComponent.h"
 #include "GameFramework/PawnMovementComponent.h"
 #include "CPP_CharacterPaul.h"
+#include "Kismet/GameplayStatics.h"
 void UAIStateAttackLF::Enter ( UAICharacterAnimInstance* pAnimInstance )
 {
 	Super::Enter ( pAnimInstance );
+	attackCount = 0;
 
 	startLocation = owner->GetMesh ( )->GetBoneLocation ( (TEXT ( "head" )) );
 	startLocation.Z = 0;
-
+	//사운드
+	//UGameplayStatics::PlaySound2D ( GetWorld ( ) , owner->attackLFSFV , 0.5f );
 	if(attackPoint==EAttackPoint::Lower)
 		animInstace->PlayeAttackLowerLFMontage ( );
 	else

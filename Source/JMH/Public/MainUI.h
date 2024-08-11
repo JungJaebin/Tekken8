@@ -18,6 +18,11 @@ protected:
 	virtual void NativeConstruct() override;
 	
 public:
+
+	//widget
+	UPROPERTY()
+	class UMainGameInstance_MH* MainGameInstance;
+	
 	UPROPERTY(meta = (BindWidget))
 	class UWidgetSwitcher* WidgetSwitcher;
 
@@ -63,7 +68,24 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	class UButton* Btn_Right;
 
-	//
+	//chooseCharacter
+	UPROPERTY()
+	bool bPlayer1Charac=false;
+	
+	UPROPERTY()
+	bool bPlayer2Charac=false;
+	
+	UPROPERTY(meta = (BindWidget))
+	class UVerticalBox* Player1Info;
+
+	UPROPERTY(meta = (BindWidget))
+	class UVerticalBox* Player2Info;
+
+	UPROPERTY(meta = (BindWidget))
+	class UOverlay* Player1Input;
+	
+	UPROPERTY(meta = (BindWidget))
+	class UOverlay* Player2Input;
 	
 	UPROPERTY(meta = (BindWidget))
 	class UImage* img_Player1;
@@ -71,8 +93,8 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	class UImage* img_Player2;
 
-	UPROPERTY(meta = (BindWidget))
-	class UButton* Btn_JIN;
+	//UPROPERTY(meta = (BindWidget))
+	//class UButton* Btn_JIN;
 
 	UPROPERTY(meta = (BindWidget))
 	class UButton* Btn_Paul;
@@ -80,8 +102,8 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	class UButton* Btn_Random;
 
-	UPROPERTY(meta = (BindWidget))
-	class UButton* Btn_Kazuya;
+	//UPROPERTY(meta = (BindWidget))
+	//class UButton* Btn_Kazuya;
 
 	//Player1 Info
 
@@ -134,25 +156,63 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	class UTextBlock* Text_P2Name;
 
+	//기타
+	
+	UPROPERTY(meta = (BindWidget))
+	class UOverlay* ove_Empty;
+
+	UPROPERTY(meta = (BindWidget))
+	class UButton* btn_Back;
+
+	
+
+
+
 public:
+	//Mainmenu
+//토너먼트는 보류
+	UFUNCTION()
+	void OnClickedTournament();
 
 	UFUNCTION()
-	void Tournament();
-
-	UFUNCTION()
-	void PlayerVSPlayer();
+	void OnClickedPlayerVSPlayer();
 	
 	UFUNCTION()
-	void PlayerVSCPU();
+	void OnClickedPlayerVSCPU();
 
 	UFUNCTION()
-	void LeftSide();
+	void OnClickedCommu();
 
 	UFUNCTION()
-	void RightSide();
+	void OnClickedPalyData();
+
+	//PlaySide
+	UFUNCTION()
+	void OnClickedLeftSide();
 
 	UFUNCTION()
-	void ChooseCharactter();
+	void OnClickedRightSide();
 
+	//chooseCharacter
+	UFUNCTION()
+	void StartChoose();
 	
+	UFUNCTION()
+	void ChooseCharactter(int32 characnum);
+
+	UFUNCTION()
+	void OnClickedPaul();
+
+	UFUNCTION()
+	void OnClickedRandom();
+
+	UFUNCTION()
+	void ShowP1InputWindow();
+
+	UFUNCTION()
+	void ShowP2InputWindow();
+
+	//기타
+	UFUNCTION()
+	void OnClickedEmptyBack();
 };

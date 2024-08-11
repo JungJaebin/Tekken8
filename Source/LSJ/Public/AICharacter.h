@@ -41,6 +41,8 @@ class LSJ_API AAICharacter : public ACPP_Tekken8CharacterParent
 	UPROPERTY ( )
 	class UAIStateAttackLH* stateAttackLH;
 	UPROPERTY ( )
+	class UAIStateKnockDown* stateKnockDown;
+	UPROPERTY ( )
 	class UAIStateComboLaserAttack* stateComboLaserAttack;
 	UPROPERTY ( )
 	class UAIStateWalkCross* stateWalkCross;
@@ -50,9 +52,14 @@ class LSJ_API AAICharacter : public ACPP_Tekken8CharacterParent
 	class UBlackboardComponent* blackboardComp;
 
 	void SetAttackInfoOwnerOpposite ( FAttackInfoInteraction& attackInfo );
+
 public:
 	// Sets default values for this character's properties
 	AAICharacter();
+
+	//시작움직임설정
+	virtual void StartPlayer ( );
+	virtual void EndPlayer ( );
 
 	//이펙트
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Default")
@@ -85,12 +92,34 @@ public:
 	class UBoxComponent* collisionMiddle;
 	UPROPERTY ( EditDefaultsOnly )
 	class UBoxComponent* collisionLower;
+	//UPROPERTY ( EditDefaultsOnly )
+	//class UCapsuleComponent* collisionBody;
 
+	
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-
-public:	
+	bool isResume;
+	bool isPause;
+	AGameMode_MH* gameMode;
+public:
+	//사운드
+	UPROPERTY(EditDefaultsOnly)
+	class USoundBase* attackLFSFV;
+		UPROPERTY(EditDefaultsOnly)
+	class USoundBase* attackRFSFV;
+		UPROPERTY(EditDefaultsOnly)
+	class USoundBase* attackLHSFV;
+		UPROPERTY(EditDefaultsOnly)
+	class USoundBase* attackRHSFV;
+		UPROPERTY(EditDefaultsOnly)
+	class USoundBase* guardSFV;
+		UPROPERTY(EditDefaultsOnly)
+	class USoundBase* hitLastSFV;
+		UPROPERTY(EditDefaultsOnly)
+	class USoundBase* hitStrongSFV;
+			UPROPERTY(EditDefaultsOnly)
+	class USoundBase* hitWeakSFV;
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 	// Called to bind functionality to input
@@ -104,6 +133,7 @@ public:
 	float GetBTWDistance ( );
 	// 상태 이동 객체에 대한 접근 메서드 추가
 	void SetStateIdle();
+	UAIStateKnockDown* GetAIStateKnockDown ( ) const { return stateKnockDown; }
 	UAIStateWalkCross* GetAIStateWalkCross ( ) const { return stateWalkCross; }
 	IAIStateInterface* GetCurrentState ( ) const { return currentState; }
 	UAIStateIdle* GetAIStateIdle ( ) const { return stateIdle; }

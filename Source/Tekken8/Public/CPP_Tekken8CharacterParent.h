@@ -145,13 +145,17 @@ public:
 
 	FColor debugColor;
 	//해당 공격받았을때 실행되는 몽타지
-	UAnimMontage* hitMontage;
+	UAnimMontage* hitMontage=nullptr;
 	//해당 공격이 가드되었을때 실행되는 몽타지
+<<<<<<< HEAD
 	UAnimMontage* guardMontage;
 
 	class USoundBase* uMovementSound;
 	class USoundBase* uHitSound;
 	class USoundBase* uDefenceSound;
+=======
+	UAnimMontage* guardMontage=nullptr;
+>>>>>>> origin/dev
 };
 
 UCLASS()

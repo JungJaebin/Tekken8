@@ -26,7 +26,9 @@
 #include "../Plugins/FX/Niagara/Source/Niagara/Public/NiagaraFunctionLibrary.h"
 #include "AIStateWalkCross.h"
 #include "AIStateAttackLH.h"
-
+#include "AIStateKnockDown.h"
+#include "BrainComponent.h"
+#include "GameMode_MH.h"
 
 // Sets default values
 AAICharacter::AAICharacter()
@@ -44,7 +46,7 @@ AAICharacter::AAICharacter()
 		GetMesh ( )->SetAnimInstanceClass ( animFinder.Class );
 	}
 	GetMesh ( )->SetRelativeScale3D ( FVector ( 0.1f , 0.1f , 0.1f ) );
-	GetMesh( )->SetRelativeLocation(FVector(0,0,-90.f));
+	GetMesh( )->SetRelativeLocation(FVector( -20.0 ,0,-90.f));
 	GetMesh ( )->SetRelativeRotation ( FRotator (  0, -90.f , 0 ) );
 
 	collisionLH = CreateDefaultSubobject<USphereComponent> ( TEXT ( "collisionLH" ) );
@@ -65,16 +67,21 @@ AAICharacter::AAICharacter()
 	collisionRF->SetCollisionEnabled ( ECollisionEnabled::NoCollision );
 
 	//몸체 콜리전
-	//collisionTop = CreateDefaultSubobject<UBoxComponent> ( TEXT ( "collisionTop" ) );
-	//collisionMiddle = CreateDefaultSubobject<UBoxComponent> ( TEXT ( "collisionMiddle" ) );
-	//collisionLower = CreateDefaultSubobject<UBoxComponent> ( TEXT ( "collisionLower" ) );
-	//collisionTop->SetupAttachment ( GetMesh ( ) , TEXT ( "head" ) );
-	//collisionTop->SetBoxExtent ( FVector (311.232643 ,166.634513 , 240.066655) );
-	//collisionMiddle->SetupAttachment ( GetMesh ( ) , TEXT ( "spine_01" ) );
-	//collisionMiddle->SetBoxExtent ( (FVector ( 311.232643 ,  315.176916 ,  240.066655)) );
-	//collisionLower->SetupAttachment ( GetMesh ( ) , TEXT ( "root" ) );
-	//collisionLower->SetBoxExtent ( FVector (311.232643 , 404.006705 ,  330.919514) );
-	//collisionLower->SetRelativeLocation(FVector( 0.000000 ,199.999997 ,299.999996));
+	collisionTop = CreateDefaultSubobject<UBoxComponent> ( TEXT ( "collisionTop" ) );
+	collisionTop->SetupAttachment ( GetMesh ( ) , TEXT ( "head" ) );
+	collisionMiddle = CreateDefaultSubobject<UBoxComponent> ( TEXT ( "collisionMiddle" ) );
+	collisionMiddle->SetupAttachment ( GetMesh ( ) , TEXT ( "spine_01" ) );
+	collisionLower = CreateDefaultSubobject<UBoxComponent> ( TEXT ( "collisionLower" ) );
+	collisionLower->SetupAttachment ( GetMesh ( ) , TEXT ( "pelvis" ) );
+	collisionTop->SetBoxExtent ( FVector ( 311.232643 , 166.634513 , 240.066655 ) );
+	collisionMiddle->SetBoxExtent ( (FVector ( 311.232643 , 315.176916 , 264.956523 )) );
+	collisionMiddle->SetUsingAbsoluteRotation ( true );
+	collisionMiddle->SetRelativeLocation ( FVector ( 0,0 , 99.999999 ) );
+	collisionLower->SetBoxExtent ( FVector ( 319.717793 , 321.694333 ,336.888169 ) );
+	collisionLower->SetUsingAbsoluteRotation ( true );
+	collisionLower->SetRelativeLocation ( FVector ( 0.092165 , 531.000000 , 117.000000 ) );
+	//collisionBody = CreateDefaultSubobject<UCapsuleComponent> ( TEXT ( "collisionBody" ) );
+	//collisionBody->SetupAttachment ( GetMesh ( ) , TEXT ( "spine_01" ) );
 	//콜리전 설정
 	//플레이어랑만 충돌
 
@@ -104,6 +111,8 @@ AAICharacter::AAICharacter()
 	stateComboLaserAttack->SetStateOwner ( this );
 	stateWalkCross = CreateDefaultSubobject<UAIStateWalkCross> ( TEXT ( "stateWalkCross" ) );
 	stateWalkCross->SetStateOwner ( this );
+	stateKnockDown = CreateDefaultSubobject<UAIStateKnockDown> ( TEXT ( "stateKnockDown" ) );
+	stateKnockDown->SetStateOwner ( this );
 	//콤보 공격 정보
 	FAttackInfoInteraction attack1;
 	attack1.KnockBackDirection = FVector (250.f,0.f,0.f); //-0.5 뒤로 밀려난다 5*50 = 250.0f
@@ -198,7 +207,8 @@ AAICharacter::AAICharacter()
 	stateComboLaserAttack->attackInfoArray.Add(attack9);
 
 	FAttackInfoInteraction attackRHMiddle;
-	attackRHMiddle.KnockBackDirection = FVector ( 300.f , 0.f , 50.f ); //-0.5 보다 적게 예상 3*
+	attackRHMiddle.KnockBackDirection = FVector ( 200.f , 0.f , 00.f ); //-0.5 보다 적게 예상 3*
+	attackRHMiddle.KnockBackFallingDirection = FVector ( 1300.f , 0.f , 50.f ); // 맞았을때
 	attackRHMiddle.DamageAmount = 23;
 	attackRHMiddle.DamagePoint = EDamagePointInteraction::Middle;
 	attackRHMiddle.HitFrame = 20; //HitFrame
@@ -213,7 +223,8 @@ AAICharacter::AAICharacter()
 
 	//내가 손해면 - 상대가 손해면 +
 	FAttackInfoInteraction attackTopLH;
-	attackTopLH.KnockBackDirection = FVector ( 300.f , 0.f , 50.f ); //-0.5 보다 적게 예상 3*
+	attackTopLH.KnockBackDirection = FVector ( 200.f , 0.f , 0.f ); // 가드했을때
+	attackTopLH.KnockBackFallingDirection = FVector ( 50.f , 0.f , 0.f ); // 맞았을때
 	attackTopLH.DamageAmount = 5;
 	attackTopLH.DamagePoint = EDamagePointInteraction::Top;
 	attackTopLH.HitFrame = 10; //HitFrame
@@ -227,7 +238,8 @@ AAICharacter::AAICharacter()
 
 	//내가 손해면 - 상대가 손해면 +
 	FAttackInfoInteraction attackLowerLF;
-	attackLowerLF.KnockBackDirection = FVector ( 300.f , 0.f , 50.f ); //-0.5 보다 적게 예상 3*
+	attackLowerLF.KnockBackDirection = FVector ( 200.f , 0.f , 0.f ); // 가드했을때
+	attackLowerLF.KnockBackFallingDirection = FVector ( 50.f , 0.f , 0.f ); // 맞았을때
 	attackLowerLF.DamageAmount = 7;
 	attackLowerLF.DamagePoint = EDamagePointInteraction::Lower;
 	attackLowerLF.HitFrame = 12; //HitFrame
@@ -244,6 +256,48 @@ AAICharacter::AAICharacter()
 	{
 		niagaraFXSystem = NE.Object;
 	}
+
+	//사운드
+	ConstructorHelpers::FObjectFinder<USoundBase> attackLFSFVFinder ( TEXT ( "/Script/Engine.SoundWave'/Game/LSJ/Sound/AttackLF.AttackLF'" ) );
+	if ( attackLFSFVFinder.Succeeded ( ) )
+	{
+		attackLFSFV = attackLFSFVFinder.Object;
+	}
+	ConstructorHelpers::FObjectFinder<USoundBase> attackLHSFVFinder ( TEXT ( "/Script/Engine.SoundWave'/Game/LSJ/Sound/AttackLH.AttackLH'" ) );
+	if ( attackLHSFVFinder.Succeeded ( ) )
+	{
+		attackLHSFV = attackLHSFVFinder.Object;
+	}
+	ConstructorHelpers::FObjectFinder<USoundBase> attackRFSFVFinder ( TEXT ( "/Script/Engine.SoundWave'/Game/LSJ/Sound/AttackRF.AttackRF'" ) );
+	if ( attackRFSFVFinder.Succeeded ( ) )
+	{
+		attackRFSFV = attackRFSFVFinder.Object;
+	}
+	ConstructorHelpers::FObjectFinder<USoundBase> attackRHSFVFinder ( TEXT ( "/Script/Engine.SoundWave'/Game/LSJ/Sound/AttackRH.AttackRH'" ) );
+	if ( attackRHSFVFinder.Succeeded ( ) )
+	{
+		attackRHSFV = attackRHSFVFinder.Object;
+	}
+	ConstructorHelpers::FObjectFinder<USoundBase> guardSFVFinder ( TEXT ( "/Script/Engine.SoundWave'/Game/LSJ/Sound/Guard.Guard'" ) );
+	if ( guardSFVFinder.Succeeded ( ) )
+	{
+		guardSFV = guardSFVFinder.Object;
+	}
+	ConstructorHelpers::FObjectFinder<USoundBase> hitLastSFVFinder ( TEXT ( "/Script/Engine.SoundWave'/Game/LSJ/Sound/HitLast.HitLast'" ) );
+	if ( hitLastSFVFinder.Succeeded ( ) )
+	{
+		hitLastSFV = hitLastSFVFinder.Object;
+	}
+	ConstructorHelpers::FObjectFinder<USoundBase> hitStrongSFVFinder ( TEXT ( "/Script/Engine.SoundWave'/Game/LSJ/Sound/HitStrong.HitStrong'" ) );
+	if ( hitStrongSFVFinder.Succeeded ( ) )
+	{
+		hitStrongSFV = hitStrongSFVFinder.Object;
+	}
+	ConstructorHelpers::FObjectFinder<USoundBase> hitWeakSFVFinder ( TEXT ( "/Script/Engine.SoundWave'/Game/LSJ/Sound/HitWeak.HitWeak'" ) );
+	if ( hitWeakSFVFinder.Succeeded ( ) )
+	{
+		hitWeakSFV = hitWeakSFVFinder.Object;
+	}
 	//중력적용
 	//GetCharacterMovement()->bApplyGravityWhileJumping = true;
 	//앞으로만 이동되게 하는 설정
@@ -253,6 +307,35 @@ AAICharacter::AAICharacter()
 	AIControllerClass = AAICharacterController::StaticClass();
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 }
+
+void AAICharacter::StartPlayer ( )
+{
+	if ( aiController->BrainComponent )
+	{
+		//중지
+		//서있고 멈춰있는거
+
+		//게임시작
+		//캐릭터가 죽거나 시간제한이 걸렸을때
+		blackboardComp->SetValueAsBool ( TEXT ( "IsStart" ) , false );
+
+	}
+}
+
+void AAICharacter::EndPlayer ( )
+{
+	animInstance->StopAllMontages ( 0.0f );
+	animInstance->InitializeAnimation ( );
+	animInstance->bDie = false;
+
+	blackboardComp->SetValueAsBool ( TEXT ( "IsStart" ) , true );
+	blackboardComp->SetValueAsBool ( TEXT ( "IsHitFalling" ) , false );
+	blackboardComp->SetValueAsBool ( TEXT ( "IsHit" ) , false );
+	blackboardComp->SetValueAsBool ( TEXT ( "IsBound" ) , false );
+	isResume = true;
+	isPause = false;
+}
+
 void AAICharacter::SetAttackInfoOwnerOpposite ( FAttackInfoInteraction& attackInfo )
 {
 	//공격자
@@ -275,14 +358,19 @@ void AAICharacter::BeginPlay()
 	animInstance = Cast<UAICharacterAnimInstance> (GetMesh()->GetAnimInstance());
 	if ( animInstance )
 	{
-		
+		if(stateAttackLF->attackInfoArray.IsValidIndex ( 0 ))
+			stateAttackLF->attackInfoArray[0].hitMontage=animInstance->hitLowerRFMontage;
+		if ( stateAttackRH->attackInfoArray.IsValidIndex ( 0 ) )
+			stateAttackRH->attackInfoArray[0].hitMontage = animInstance->hitFallingRHMontage;
 		//animInstance->OnMontageEnded.AddDynamic ( this , &AAICharacter::HandleOnMontageEnded );
 	}
 	
-	if ( IsPlayer1 )
-		GetCapsuleComponent ( )->SetCollisionProfileName ( FName ( TEXT ( "Player1Capsule" ) ) );
-	else
-		GetCapsuleComponent ( )->SetCollisionProfileName ( FName ( TEXT ( "Player2Capsule" ) ) );
+	//콜리전
+	//if ( IsPlayer1 )
+	//	GetCapsuleComponent ( )->SetCollisionProfileName ( FName ( TEXT ( "Player1Capsule" ) ) );
+	//else
+	//	GetCapsuleComponent ( )->SetCollisionProfileName ( FName ( TEXT ( "Player2Capsule" ) ) );
+
 	//GetRootComponent()->SetCollisionName
 	//FTimerHandle handle;
 	//GetWorld ( )->GetTimerManager ( ).SetTimer ( handle ,FTimerDelegate::CreateLambda ([this]() {
@@ -298,26 +386,87 @@ void AAICharacter::BeginPlay()
 	aiController = Cast<AAICharacterController> ( GetController ( ) );
 	check(aiController);
 	//카메라 좌측인지 오른쪽인지 체크
-	float cameraDirection = FVector::DotProduct ( UGameplayStatics::GetPlayerPawn ( GetWorld ( ) , 0 )->GetActorRightVector ( ) , GetActorLocation() );
+	float cameraDirection = FVector::DotProduct ( UGameplayStatics::GetPlayerPawn ( GetWorld ( ) , 0 )->GetActorRightVector ( ) , GetActorLocation ( ) );
 	if ( cameraDirection > 0 )
 	{
-		aiController->SetBehaviorTree(1);
+		aiController->SetBehaviorTree ( 1 );
 	}
 	else
 	{
-		aiController->SetBehaviorTree(2);
+		aiController->SetBehaviorTree ( 2 );
 	}
 	blackboardComp = aiController->GetBlackboardComponent ( );
-	check (blackboardComp);
+	check ( blackboardComp );
 
-
+	gameMode = Cast<AGameMode_MH> ( UGameplayStatics::GetGameMode ( GetWorld ( ) ) );
 }
 
 void AAICharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	if ( gameMode )
+	{
+		if ( gameMode->CurrentState == EGameState::RoundStart && !isPause )
+		{
+			//서있게
+			ExitCurrentState ( ECharacterStateInteraction::Idle );
+			SetStateIdle ( );
+			blackboardComp->SetValueAsBool ( TEXT ( "IsStart" ) , false );
+			animInstance->StopAllMontages ( 0.0f );
+			animInstance->InitializeAnimation ( );
+			animInstance->bDie = false;
+
+			blackboardComp->SetValueAsBool ( TEXT ( "IsStart" ) , false );
+			blackboardComp->SetValueAsBool ( TEXT ( "IsHitFalling" ) , false );
+			blackboardComp->SetValueAsBool ( TEXT ( "IsHit" ) , false );
+			blackboardComp->SetValueAsBool ( TEXT ( "IsBound" ) , false );
+			isPause = true;
+		}
+		else if ( gameMode->CurrentState == EGameState::InProgress && isPause )
+		{
+			//움직이게
+			ExitCurrentState ( ECharacterStateInteraction::Idle );
+			SetStateIdle ( );
+			blackboardComp->SetValueAsBool ( TEXT ( "IsStart" ) , false );
+			animInstance->StopAllMontages ( 0.0f );
+			animInstance->InitializeAnimation ( );
+			animInstance->bDie = false;
+
+			blackboardComp->SetValueAsBool ( TEXT ( "IsStart" ) , false );
+			blackboardComp->SetValueAsBool ( TEXT ( "IsHitFalling" ) , false );
+			blackboardComp->SetValueAsBool ( TEXT ( "IsHit" ) , false );
+			blackboardComp->SetValueAsBool ( TEXT ( "IsBound" ) , false );
+			blackboardComp->SetValueAsBool ( TEXT ( "IsStart" ) , true );
+			isPause = false;
+		}
+		else if ( bIsDead )
+		{
+			//멈추게
+			ExitCurrentState ( ECharacterStateInteraction::Idle );
+			SetStateIdle ( );
+			blackboardComp->SetValueAsBool ( TEXT ( "IsStart" ) , false );
+			bIsDead = false;
+		}
+	}
+	
+	//if ( bIsDead )
+	//{
+	//	PauseAI ( ); 
+	//	//최소 한번
+	//	//라운드 끝에 한번
+	//}
+	//else
+	//{
+	//	ResumeAI ( );
+	//	//라운드 시작 n초뒤 한번
+	//}
+
+
+
 	UpdateState( DeltaTime );
 	
+	
+
 	//회전
 	if ( bLookTarget )
 	{
@@ -431,8 +580,8 @@ void AAICharacter::ExitCurrentState ( ECharacterStateInteraction state)
 	if ( currentState ) {
 		currentState->Exit ( );
 	}
-	if( state == ECharacterStateInteraction::HitFalling )
-		ChangeState(stateIdle);
+	//if( state == ECharacterStateInteraction::HitFalling )
+		//ChangeState(stateIdle);
 }
 
 int8 AAICharacter::ChangeAttackMotionDependingOpponentState ( )
@@ -458,7 +607,8 @@ int8 AAICharacter::ChangeAttackMotionDependingOpponentState ( )
 		//스탠드 상태일때 랜덤 공격
 		//randomAttackIndex = FMath::RandRange ( 1 , 3 );
 	}
-
+	//test
+	randomAttackIndex = 2;
 	return randomAttackIndex;
 }
 
@@ -480,98 +630,202 @@ void AAICharacter::SetStateIdle ( )
 
 void AAICharacter::OnAttackCollisionLF ( )
 {
-	collisionLF->SetCollisionEnabled ( ECollisionEnabled::QueryOnly);
+	if ( IsAttacked || currentState == stateIdle )
+		return;
+	//collisionLF->SetCollisionEnabled ( ECollisionEnabled::QueryOnly);
+	float radius = 40.0f;
+	TArray<TEnumAsByte<EObjectTypeQuery>> traceObjectTypes;
+	traceObjectTypes.Add ( UEngineTypes::ConvertToObjectType ( ECollisionChannel::ECC_Pawn ) );
+	TArray<AActor*> ignoreActors;
+	ignoreActors.Init ( this , 1 );
+	TArray<AActor*> outActors;
+	FVector sphereSpawnLocation = collisionLF->GetComponentLocation ( );
+	UClass* seekClass = ACPP_Tekken8CharacterParent::StaticClass ( );
+	bool hit = UKismetSystemLibrary::SphereOverlapActors ( GetWorld ( ) , sphereSpawnLocation , radius , traceObjectTypes , seekClass , ignoreActors , outActors );;
+	FAttackInfoInteraction hitInfo = SendAttackInfo ( );
+	if ( hit )
+	{
+		for ( AActor* hitActor : outActors )
+		{
+			if ( hitActor->IsA<ACPP_Tekken8CharacterParent> ( ) )
+			{
+				ACPP_Tekken8CharacterParent* hitCharacter = Cast<ACPP_Tekken8CharacterParent> ( hitActor );
+			
+				if ( currentState->GetAttackCount ( ) == 0 )
+				{
+					//사운드
+					UGameplayStatics::PlaySound2D ( GetWorld ( ) , attackLFSFV );
+				}
+			
+				hitInfo.skellEffectLocation = sphereSpawnLocation;
+				//공격 결과 blackboardComp에 넣기 
+				blackboardComp->SetValueAsEnum ( TEXT ( "EAttackResult" ) , aOpponentPlayer->HitDecision ( hitInfo , this ) ? 1 : 0 ); //0 : hit - EAttackResult
+
+				//DrawDebugSphere ( GetWorld ( ) , collisionLH->GetComponentLocation ( ) , 20 , 26 , FColor ( 181 , 0 , 0 ) , true , 0.5f , 0 , 0.5f );
+				IsAttacked = true;
+			}
+		}
+	}
+	else
+	{
+		// 아무도 안맞았을때
+		blackboardComp->SetValueAsEnum ( TEXT ( "EAttackResult" ) , 2 ); //2 : Miss - EAttackResult
+	}
 }
 
 void AAICharacter::OnAttackCollisionRF ( )
 {
-	collisionRF->SetCollisionEnabled ( ECollisionEnabled::QueryOnly );
+	if ( IsAttacked || currentState == stateIdle )
+		return;
+	//collisionRF->SetCollisionEnabled ( ECollisionEnabled::QueryOnly );
+	float radius = 20.0f;
+	TArray<TEnumAsByte<EObjectTypeQuery>> traceObjectTypes;
+	traceObjectTypes.Add ( UEngineTypes::ConvertToObjectType ( ECollisionChannel::ECC_Pawn ) );
+	TArray<AActor*> ignoreActors;
+	ignoreActors.Init ( this , 1 );
+	TArray<AActor*> outActors;
+	FVector sphereSpawnLocation = collisionRF->GetComponentLocation ( );
+	UClass* seekClass = ACPP_Tekken8CharacterParent::StaticClass ( );
+	bool hit = UKismetSystemLibrary::SphereOverlapActors ( GetWorld ( ) , sphereSpawnLocation , radius , traceObjectTypes , seekClass , ignoreActors , outActors );;
+	FAttackInfoInteraction hitInfo = SendAttackInfo ( );
+	if ( hit )
+	{
+		for ( AActor* hitActor : outActors )
+		{
+			if ( hitActor->IsA<ACPP_Tekken8CharacterParent> ( ) )
+			{
+				ACPP_Tekken8CharacterParent* hitCharacter = Cast<ACPP_Tekken8CharacterParent> ( hitActor );
+				if ( currentState->GetAttackCount ( ) == 0 )
+					//사운드
+					UGameplayStatics::PlaySound2D ( GetWorld ( ) , attackRFSFV );
+
+				hitInfo.skellEffectLocation = sphereSpawnLocation;
+				//공격 결과 blackboardComp에 넣기 
+				blackboardComp->SetValueAsEnum ( TEXT ( "EAttackResult" ) , aOpponentPlayer->HitDecision ( hitInfo , this ) ? 1 : 0 ); //0 : hit - EAttackResult
+
+				//DrawDebugSphere ( GetWorld ( ) , collisionLH->GetComponentLocation ( ) , 20 , 26 , FColor ( 181 , 0 , 0 ) , true , 0.5f , 0 , 0.5f );
+				IsAttacked = true;
+			}
+		}
+	}
+	else
+	{
+		// 아무도 안맞았을때
+		blackboardComp->SetValueAsEnum ( TEXT ( "EAttackResult" ) , 2 ); //2 : Miss - EAttackResult
+	}
 }
 
 void AAICharacter::OnAttackCollisionLH ( )
 {
-	collisionLH->SetCollisionEnabled ( ECollisionEnabled::QueryOnly );
-	//float radius = 20.0f;
-	//TArray<TEnumAsByte<EObjectTypeQuery>> traceObjectTypes;
-	//traceObjectTypes.Add ( UEngineTypes::ConvertToObjectType ( ECollisionChannel::ECC_Pawn ) );
-	//TArray<AActor*> ignoreActors;
-	//ignoreActors.Init ( this , 1 );
-	//TArray<AActor*> outActors;
-	//FVector sphereSpawnLocation = collisionLH->GetComponentLocation();
-	//UClass* seekClass = ACPP_Tekken8CharacterParent::StaticClass ( );
-	//bool hit = UKismetSystemLibrary::SphereOverlapActors ( GetWorld ( ) , sphereSpawnLocation , radius , traceObjectTypes , seekClass , ignoreActors , outActors );;
-	//if ( hit )
-	//{
-	//	for ( AActor* hitActor : outActors )
-	//	{
-	//		if ( hitActor->IsA<ACPP_Tekken8CharacterParent> ( ) )
-	//		{
-	//			ACPP_Tekken8CharacterParent* hitCharacter = Cast<ACPP_Tekken8CharacterParent> ( hitActor );
-	//			//hitCharacter->HitDecision ( SendAttackInfo ( ) , this );
-	//			//DrawDebugSphere ( GetWorld ( ) , collisionLH->GetComponentLocation ( ) , 20 , 26 , FColor ( 181 , 0 , 0 ) , true , 0.5f , 0 , 0.5f );
-	//			//if ( hitCharacter->HitDecision ( SendAttackInfo () , this ) )
-	//	/*			sFrameStatus.FrameBlockUsing = attackInfo.OwnerGuardFrame;
-	//			else
-	//				sFrameStatus.FrameBlockUsing = attackInfo.OwnerGuardFrame;*/
-	//		}
-	//	}
-	//}
+	if ( IsAttacked || currentState == stateIdle )
+		return;
+	//collisionLH->SetCollisionEnabled ( ECollisionEnabled::QueryOnly );
+
+	float radius = 20.0f;
+	TArray<TEnumAsByte<EObjectTypeQuery>> traceObjectTypes;
+	traceObjectTypes.Add ( UEngineTypes::ConvertToObjectType ( ECollisionChannel::ECC_Pawn ) );
+	TArray<AActor*> ignoreActors;
+	ignoreActors.Init ( this , 1 );
+	TArray<AActor*> outActors;
+	FVector sphereSpawnLocation = collisionLH->GetComponentLocation();
+	UClass* seekClass = ACPP_Tekken8CharacterParent::StaticClass ( );
+	bool hit = UKismetSystemLibrary::SphereOverlapActors ( GetWorld ( ) , sphereSpawnLocation , radius , traceObjectTypes , seekClass , ignoreActors , outActors );;
+	FAttackInfoInteraction hitInfo = SendAttackInfo ( );
+	if ( hit )
+	{
+		for ( AActor* hitActor : outActors )
+		{
+			if ( hitActor->IsA<ACPP_Tekken8CharacterParent> ( ) )
+			{
+				ACPP_Tekken8CharacterParent* hitCharacter = Cast<ACPP_Tekken8CharacterParent> ( hitActor );
+				if ( currentState->GetAttackCount ( ) == 0 )
+					//사운드
+					UGameplayStatics::PlaySound2D ( GetWorld ( ) , attackLHSFV );
+
+				hitInfo.skellEffectLocation = sphereSpawnLocation;
+				//공격 결과 blackboardComp에 넣기 
+				blackboardComp->SetValueAsEnum ( TEXT ( "EAttackResult" ) , aOpponentPlayer->HitDecision ( hitInfo , this ) ? 1 : 0 ); //0 : hit - EAttackResult
+
+				//DrawDebugSphere ( GetWorld ( ) , collisionLH->GetComponentLocation ( ) , 20 , 26 , FColor ( 181 , 0 , 0 ) , true , 0.5f , 0 , 0.5f );
+				IsAttacked = true;
+			}
+		}
+	}
+	else
+	{
+		// 아무도 안맞았을때
+		blackboardComp->SetValueAsEnum ( TEXT ( "EAttackResult" ) , 2 ); //2 : Miss - EAttackResult
+	}
 }
 
 void AAICharacter::OnAttackCollisionRH ( )
 {
-	collisionRH->SetCollisionEnabled ( ECollisionEnabled::QueryOnly );
-	//float radius = 20.0f;
-	//TArray<TEnumAsByte<EObjectTypeQuery>> traceObjectTypes;
-	//traceObjectTypes.Add ( UEngineTypes::ConvertToObjectType ( ECollisionChannel::ECC_Pawn ) );
-	//TArray<AActor*> ignoreActors;
-	//ignoreActors.Init ( this , 1 );
-	//TArray<AActor*> outActors;
-	//FVector sphereSpawnLocation = collisionRH->GetComponentLocation ( );
-	//UClass* seekClass = ACPP_Tekken8CharacterParent::StaticClass ( );
-	//bool hit = UKismetSystemLibrary::SphereOverlapActors ( GetWorld ( ) , sphereSpawnLocation , radius , traceObjectTypes , seekClass , ignoreActors , outActors );;
-	//if ( hit )
-	//{
-	//	for ( AActor* hitActor : outActors )
-	//	{
-	//		if ( hitActor->IsA<ACPP_Tekken8CharacterParent> ( ) )
-	//		{
-	//			ACPP_Tekken8CharacterParent* hitCharacter = Cast<ACPP_Tekken8CharacterParent> ( hitActor );
-	//			//hitCharacter->HitDecision ( SendAttackInfo ( ) , this );
-	//			//if ( hitCharacter->HitDecision ( SendAttackInfo () , this ) )
-	//	/*			sFrameStatus.FrameBlockUsing = attackInfo.OwnerGuardFrame;
-	//			else
-	//				sFrameStatus.FrameBlockUsing = attackInfo.OwnerGuardFrame;*/
-	//		}
-	//	}
-	//}
+	if ( IsAttacked || currentState == stateIdle)
+		return;
+	//collisionRH->SetCollisionEnabled ( ECollisionEnabled::QueryOnly );
+	float radius = 20.0f;
+	TArray<TEnumAsByte<EObjectTypeQuery>> traceObjectTypes;
+	traceObjectTypes.Add ( UEngineTypes::ConvertToObjectType ( ECollisionChannel::ECC_Pawn ) );
+	TArray<AActor*> ignoreActors;
+	ignoreActors.Init ( this , 1 );
+	TArray<AActor*> outActors;
+	FVector sphereSpawnLocation = collisionRH->GetComponentLocation ( );
+	UClass* seekClass = ACPP_Tekken8CharacterParent::StaticClass ( );
+	bool hit = UKismetSystemLibrary::SphereOverlapActors ( GetWorld ( ) , sphereSpawnLocation , radius , traceObjectTypes , seekClass , ignoreActors , outActors );;
+	FAttackInfoInteraction hitInfo = SendAttackInfo ( );
+	if ( hit  )
+	{
+		for ( AActor* hitActor : outActors )
+		{
+			if ( hitActor->IsA<ACPP_Tekken8CharacterParent> ( ) )
+			{
+				ACPP_Tekken8CharacterParent* hitCharacter = Cast<ACPP_Tekken8CharacterParent> ( hitActor );
+				if ( currentState->GetAttackCount ( ) == 0 )
+					//사운드
+					UGameplayStatics::PlaySound2D ( GetWorld ( ) , attackRHSFV );
+
+				hitInfo.skellEffectLocation = sphereSpawnLocation;
+				hitInfo.KnockBackDirection = FVector (1000,0,1000);
+				//공격 결과 blackboardComp에 넣기 
+				blackboardComp->SetValueAsEnum ( TEXT ( "EAttackResult" ) , aOpponentPlayer->HitDecision ( hitInfo , this ) ? 1 : 0 ); //0 : hit - EAttackResult
+
+				//DrawDebugSphere ( GetWorld ( ) , collisionLH->GetComponentLocation ( ) , 20 , 26 , FColor ( 181 , 0 , 0 ) , true , 0.5f , 0 , 0.5f );
+				IsAttacked = true;
+			}
+		}
+	}
+	else
+	{
+		// 아무도 안맞았을때
+		blackboardComp->SetValueAsEnum ( TEXT ( "EAttackResult" ) , 2 ); //2 : Miss - EAttackResult
+	}
 }
 
 void AAICharacter::OffAttackCollisionLF ( )
 {
 	collisionLF->SetCollisionEnabled ( ECollisionEnabled::NoCollision );
-	currentState->AddAttackCount ( 1 );
+	//currentState->AddAttackCount ( 1 );
 	IsAttacked = false;
 }
 
 void AAICharacter::OffAttackCollisionRF ( )
 {
 	collisionRF->SetCollisionEnabled ( ECollisionEnabled::NoCollision );
-	currentState->AddAttackCount ( 1 );
+	//currentState->AddAttackCount ( 1 );
 	IsAttacked = false;
 }
 
 void AAICharacter::OffAttackCollisionLH ( )
 {
 	collisionLH->SetCollisionEnabled ( ECollisionEnabled::NoCollision );
-	currentState->AddAttackCount ( 1 );
+	//currentState->AddAttackCount ( 1 );
 	IsAttacked = false;
 }
 
 void AAICharacter::OffAttackCollisionRH ( )
 {
 	collisionRH->SetCollisionEnabled ( ECollisionEnabled::NoCollision );
-	currentState->AddAttackCount(1);
+	//currentState->AddAttackCount(1);
 	//GEngine->AddOnScreenDebugMessage ( -1 , 1.f , FColor::Red , FString::Printf ( TEXT ( "OffAttackCollisionRH : %f " ) , FVector::Dist(GetMesh()->GetBoneLocation ((TEXT("head"))), collisionRH->GetComponentLocation())));
 	IsAttacked = false;
 }
@@ -598,7 +852,7 @@ void AAICharacter::OnCollisionLHBeginOverlap ( UPrimitiveComponent* OverlappedCo
 		FAttackInfoInteraction hitInfo = SendAttackInfo ( );
 		hitInfo.skellEffectLocation = collisionLH->GetComponentLocation();
 		//공격 결과 blackboardComp에 넣기 
-		blackboardComp->SetValueAsEnum ( TEXT ( "EAttackResult" ) , aOpponentPlayer->HitDecision ( hitInfo , this ) ); //0 : hit - EAttackResult
+		blackboardComp->SetValueAsEnum ( TEXT ( "EAttackResult" ) , aOpponentPlayer->HitDecision ( hitInfo , this )?1:0 ); //0 : hit - EAttackResult
 
 		//DrawDebugSphere ( GetWorld ( ) , collisionLH->GetComponentLocation ( ) , 20 , 26 , FColor ( 181 , 0 , 0 ) , true , 0.5f , 0 , 0.5f );
 		IsAttacked = true;
@@ -714,35 +968,59 @@ bool AAICharacter::HitDecision ( FAttackInfoInteraction attackInfo , ACPP_Tekken
 	//	CheckCollision ( bool guard , UBoxComponent * hitCollision )
 	if ( blackboardComp )
 	{
-		
 		niagaraFXComponent = UNiagaraFunctionLibrary::SpawnSystemAtLocation ( GetWorld ( ) , niagaraFXSystem , attackInfo.skellEffectLocation);
 
-		Hp -= attackInfo.DamageAmount;
-		Hp = FMath::Clamp(Hp,0.0f,MaxHp);
-		AGameMode_MH* gameMode = Cast<AGameMode_MH>(GetWorld()->GetAuthGameMode());
+		
+		Hp = FMath::Clamp(Hp-attackInfo.DamageAmount,0.0f,MaxHp);
+
+		gameMode = Cast<AGameMode_MH>(GetWorld()->GetAuthGameMode());
 		if( gameMode )
 			gameMode->UpdatePlayerHP(this,Hp);
 		// 확대할 위치 , 줌 정도 0.5 기본 , 흔들림정도 , 흔들림 시간
 		aMainCamera->RequestZoomEffect ( GetActorLocation ( ) , 0.5f , 10.0f , 0.3f );
 
-		ExitCurrentState ( ECharacterStateInteraction::HitGround );
-		if ( attackInfo.KnockBackDirection.Z > 0 || currentState == stateBound || currentState == stateHitFalling )
+		//사운드
+		UGameplayStatics::PlaySound2D ( GetWorld ( ) , hitWeakSFV );
+		if ( currentState == stateKnockDown && stateKnockDown->isKnockDown )
 		{
+			//공격 받을 때 지연 프레임을 받아서 HitFalling 상태에 전달하고
+			//HitFalling 상태에서 이전 상태가 stateKnockDown 이면 누워서 맞는 애니메이션을 지연 프레임만큼 실행하고
+			//해당 애니메이션이 끝나면 stateKnockDown 에 지연이 끝났다는 것을 알리고 stateKnockDown 상태로 변경한다.
+			ExitCurrentState ( ECharacterStateInteraction::HitGround );
+			stateKnockDown->SetAttackInfo ( attackInfo );
 			stateHitFalling->SetAttackInfo ( attackInfo );
+			stateHitFalling->WasKnockDown = true;
 			blackboardComp->SetValueAsBool ( TEXT ( "IsHitFalling" ) , true );
+			eCharacterState = ECharacterStateInteraction::Sit;
 		}
-		/*else if ( )
-		{
-			stateBound->SetAttackInfo ( attackInfo );
-			blackboardComp->SetValueAsBool ( TEXT ( "IsBound" ) , true );
-		}*/
 		else
 		{
-			stateHit->SetAttackInfo ( attackInfo );
-			blackboardComp->SetValueAsBool ( TEXT ( "IsHit" ) , true );
-		}
+			if ( attackInfo.KnockBackFallingDirection.Z > 0 || currentState == stateBound || currentState == stateHitFalling )
+			{
+				ExitCurrentState ( ECharacterStateInteraction::HitGround );
+				stateHitFalling->SetAttackInfo ( attackInfo );
+				blackboardComp->SetValueAsBool ( TEXT ( "IsHitFalling" ) , true );
+			}
 		
+			/*else if ( )
+			{
+				stateBound->SetAttackInfo ( attackInfo );
+				blackboardComp->SetValueAsBool ( TEXT ( "IsBound" ) , true );
+			}*/
+		
+			else
+			{
+				ExitCurrentState ( ECharacterStateInteraction::HitGround );
+				stateHit->SetAttackInfo ( attackInfo );
+				blackboardComp->SetValueAsBool ( TEXT ( "IsHit" ) , true );
+			}
+		}
 		OnHit.Broadcast ( );
+		if ( Hp <= 0 )
+		{
+			bIsDead = true;
+			animInstance->bDie = true;
+		}
 	}
 
 	//ChangeState( stateHit );

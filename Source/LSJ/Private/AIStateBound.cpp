@@ -18,7 +18,14 @@ void UAIStateBound::SetAttackInfo ( FAttackInfoInteraction& pAttackInfo )
 void UAIStateBound::Enter ( UAICharacterAnimInstance* pAnimInstance )
 {
 	Super::Enter ( pAnimInstance );
-	owner->GetBlackboardComponent ( )->SetValueAsBool ( TEXT ( "IsBound" ) , false ); // 원하는 값을 설정
+	if ( false == owner->GetBlackboardComponent ( )->GetValueAsBool ( TEXT ( "IsBound" ) ) )
+	{
+		Exit ( );
+		return;
+	}
+
+
+	owner->GetBlackboardComponent ( )->SetValueAsBool ( TEXT ( "IsBound" ) , false );
 
 	{
 		FVector Direction = owner->GetActorLocation ( ) - owner->aOpponentPlayer->GetActorLocation ( ) + owner->aOpponentPlayer->GetActorForwardVector ( ) * -1000.f;
@@ -49,12 +56,17 @@ void UAIStateBound::Execute ( const float& deltatime )
 		FVector NewLocation = owner->GetActorLocation ( ) + (Gravity);
 		owner->SetActorLocation ( NewLocation );
 	}
-	else if (false == owner->GetCharacterMovement ( )->IsFalling ( )&& owner->GetActorLocation().Z<-80.f)
-		Exit ();
+	else if ( false == owner->GetCharacterMovement ( )->IsFalling ( ) && owner->GetActorLocation ( ).Z < -80.f )
+	{
+		owner->GetBlackboardComponent ( )->SetValueAsBool ( TEXT ( "IsKnockDown" ) , true );
+		Exit ( );
+	}
+
 }
 
 void UAIStateBound::Exit ( )
 {
-	owner->ChangeState ( owner->GetAIStateIdle () );
+	animInstace->bKnockDown = true;
+
 	Super::Exit ( );
 }

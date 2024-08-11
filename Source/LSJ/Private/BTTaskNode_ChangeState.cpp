@@ -14,6 +14,7 @@
 #include "AIStateHitFalling.h"
 #include "AIStateBound.h"
 #include "AIStateWalkCross.h"
+#include "AIStateKnockDown.h"
 UBTTaskNode_ChangeState::UBTTaskNode_ChangeState ( )
 {
 	
@@ -64,6 +65,10 @@ EBTNodeResult::Type UBTTaskNode_ChangeState::ExecuteTask ( UBehaviorTreeComponen
 			{
 				currentState = Enemy->GetAIStateRun ( );
 			}
+			else if ( newStateClass == UAIStateKnockDown::StaticClass ( ) )
+			{
+				currentState = Enemy->GetAIStateKnockDown ( );
+			}
 			if ( currentState )
 			{
 				// 상태 완료시 호출될 델리게이트 바인딩
@@ -109,6 +114,11 @@ EBTNodeResult::Type UBTTaskNode_ChangeState::ExecuteTask ( UBehaviorTreeComponen
 					stateWalkCross->bClockwise = bClockwise;
 					if ( !stateWalkCross->OnStateComplete.IsAlreadyBound ( this , &UBTTaskNode_ChangeState::OnStateCompleted ) )
 						stateWalkCross->OnStateComplete.AddDynamic ( this , &UBTTaskNode_ChangeState::OnStateCompleted );
+				}
+				else if ( UAIStateKnockDown* stateKnockDown = Cast<UAIStateKnockDown> ( currentState ) )
+				{
+					if ( !stateKnockDown->OnStateComplete.IsAlreadyBound ( this , &UBTTaskNode_ChangeState::OnStateCompleted ) )
+						stateKnockDown->OnStateComplete.AddDynamic ( this , &UBTTaskNode_ChangeState::OnStateCompleted );
 				}
 				bIsWaitingForState = true;
 				cachedOwnerComp = &OwnerComp;

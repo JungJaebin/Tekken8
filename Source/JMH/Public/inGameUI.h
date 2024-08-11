@@ -39,19 +39,13 @@ public:
 
 	UFUNCTION()
 	void HideRoundText();
-	
-	UFUNCTION()
-	void ShowGameOver();
 
-	UFUNCTION()
-	void HideGameOver();
-	
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable, Category = "UI")
 	void ShowTextVisibility(const FString& TextName);
 
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable, Category = "UI")
 	void HideTextVisibility(const FString& TextName);
-	
+
 	UPROPERTY(EditAnywhere,meta=(BindWidget),Category="MySettings")
 	class UTextBlock* text_Round;
 
@@ -78,6 +72,40 @@ public:
 	
 	UPROPERTY(EditAnywhere,meta=(BindWidget),Category="MySettings")
 	class UCanvasPanel* can_YouLose;
+
+	UPROPERTY(EditAnywhere,meta=(BindWidget),Category="MySettings")
+	class UCanvasPanel* can_Draw;
+
+	UPROPERTY(EditAnywhere,meta=(BindWidget),Category="MySettings")
+	class UCanvasPanel* can_KO;
+
+	//UI 애니메이션
 	
+	UPROPERTY(meta = (BindWidgetAnim), Transient)
+	class UWidgetAnimation* Roundnum;
+	
+	UPROPERTY(meta = (BindWidgetAnim), Transient)
+	class UWidgetAnimation* canReady;
+	
+	UPROPERTY(meta = (BindWidgetAnim), Transient)
+	class UWidgetAnimation* canFight;
+
+	UPROPERTY(meta = (BindWidgetAnim), Transient)
+	class UWidgetAnimation* canDraw;
+	
+	
+	UFUNCTION()
+	void PlayAnimRoundnum();
+	UFUNCTION()
+	void PlayAnimcanReady();
+	UFUNCTION()
+	void PlayAnimcanFight();
+
+	
+	// 타이머 핸들
+	FTimerHandle TimerHandle;
+
+	// 애니메이션이 끝났을 때의 핸들
+	FDelegateHandle OnAnimationFinishedHandle;
 	
 };
