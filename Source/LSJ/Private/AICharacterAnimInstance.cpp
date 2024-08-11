@@ -16,9 +16,9 @@ void UAICharacterAnimInstance::UpdateProperties ( )
         owner = Cast<AAICharacter> ( TryGetPawnOwner ( ) );	// 소유자의 Pawn 를 가져온다.
     if ( owner )
     {
+
         // 공중에 있는지
         bIsInAir = owner->GetMovementComponent ( )->IsFalling ( );
-
         // Z축이 필요없기 때문에 Z는 0.f로 처리해서 속력를 구한다
         FVector velocity = owner->GetVelocity ( );
         velocityZ = velocity.Z;

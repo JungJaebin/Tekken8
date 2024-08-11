@@ -27,6 +27,7 @@
 #include "AIStateWalkCross.h"
 #include "AIStateAttackLH.h"
 #include "AIStateKnockDown.h"
+#include "BrainComponent.h"
 
 
 // Sets default values
@@ -264,6 +265,24 @@ AAICharacter::AAICharacter()
 	AIControllerClass = AAICharacterController::StaticClass();
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 }
+
+void AAICharacter::StartMove ( )
+{
+	check ( aiController );
+	//카메라 좌측인지 오른쪽인지 체크
+	float cameraDirection = FVector::DotProduct ( UGameplayStatics::GetPlayerPawn ( GetWorld ( ) , 0 )->GetActorRightVector ( ) , GetActorLocation ( ) );
+	if ( cameraDirection > 0 )
+	{
+		aiController->SetBehaviorTree ( 1 );
+	}
+	else
+	{
+		aiController->SetBehaviorTree ( 2 );
+	}
+	blackboardComp = aiController->GetBlackboardComponent ( );
+	check ( blackboardComp );
+}
+
 void AAICharacter::SetAttackInfoOwnerOpposite ( FAttackInfoInteraction& attackInfo )
 {
 	//공격자
@@ -312,26 +331,60 @@ void AAICharacter::BeginPlay()
 	aiController = Cast<AAICharacterController> ( GetController ( ) );
 	check(aiController);
 	//카메라 좌측인지 오른쪽인지 체크
-	float cameraDirection = FVector::DotProduct ( UGameplayStatics::GetPlayerPawn ( GetWorld ( ) , 0 )->GetActorRightVector ( ) , GetActorLocation() );
+	float cameraDirection = FVector::DotProduct ( UGameplayStatics::GetPlayerPawn ( GetWorld ( ) , 0 )->GetActorRightVector ( ) , GetActorLocation ( ) );
 	if ( cameraDirection > 0 )
 	{
-		aiController->SetBehaviorTree(1);
+		aiController->SetBehaviorTree ( 1 );
 	}
 	else
 	{
-		aiController->SetBehaviorTree(2);
+		aiController->SetBehaviorTree ( 2 );
 	}
 	blackboardComp = aiController->GetBlackboardComponent ( );
-	check (blackboardComp);
-
-
+	check ( blackboardComp );
 }
 
+void AAICharacter::PauseAI ( )
+{
+	if ( isPause )
+		return;
+	if  (aiController->BrainComponent)
+	{
+		aiController->BrainComponent->StopLogic ( TEXT ( "Pause AI" ) );
+		isPause = true;
+		isResume = false;
+	}
+}
+void AAICharacter::ResumeAI ( )
+{
+	if ( isResume )
+		return;
+	if ( aiController->BrainComponent )
+	{
+		animInstance->InitializeAnimation ( );
+		aiController->BrainComponent->RestartLogic ( );
+		isResume = true;
+		isPause = false;
+	}
+}
 void AAICharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	if ( bIsDead )
+	{
+		PauseAI ( );
+	}
+	else
+	{
+		ResumeAI ( );
+	}
+
+
+
 	UpdateState( DeltaTime );
 	
+	
+
 	//회전
 	if ( bLookTarget )
 	{
@@ -816,11 +869,11 @@ bool AAICharacter::HitDecision ( FAttackInfoInteraction attackInfo , ACPP_Tekken
 	//	CheckCollision ( bool guard , UBoxComponent * hitCollision )
 	if ( blackboardComp )
 	{
-		
 		niagaraFXComponent = UNiagaraFunctionLibrary::SpawnSystemAtLocation ( GetWorld ( ) , niagaraFXSystem , attackInfo.skellEffectLocation);
 
-		Hp -= attackInfo.DamageAmount;
-		Hp = FMath::Clamp(Hp,0.0f,MaxHp);
+		
+		Hp = FMath::Clamp(Hp-attackInfo.DamageAmount,0.0f,MaxHp);
+
 		AGameMode_MH* gameMode = Cast<AGameMode_MH>(GetWorld()->GetAuthGameMode());
 		if( gameMode )
 			gameMode->UpdatePlayerHP(this,Hp);
@@ -840,25 +893,32 @@ bool AAICharacter::HitDecision ( FAttackInfoInteraction attackInfo , ACPP_Tekken
 		}
 		else
 		{
-			ExitCurrentState ( ECharacterStateInteraction::HitGround );
 			if ( attackInfo.KnockBackFallingDirection.Z > 0 || currentState == stateBound || currentState == stateHitFalling )
 			{
+				ExitCurrentState ( ECharacterStateInteraction::HitGround );
 				stateHitFalling->SetAttackInfo ( attackInfo );
 				blackboardComp->SetValueAsBool ( TEXT ( "IsHitFalling" ) , true );
 			}
+		
 			/*else if ( )
 			{
 				stateBound->SetAttackInfo ( attackInfo );
 				blackboardComp->SetValueAsBool ( TEXT ( "IsBound" ) , true );
 			}*/
-	
+		
 			else
 			{
+				ExitCurrentState ( ECharacterStateInteraction::HitGround );
 				stateHit->SetAttackInfo ( attackInfo );
 				blackboardComp->SetValueAsBool ( TEXT ( "IsHit" ) , true );
 			}
 		}
 		OnHit.Broadcast ( );
+		if ( Hp <= 0 )
+		{
+			bIsDead = true;
+			animInstance->bDie = true;
+		}
 	}
 
 	//ChangeState( stateHit );
