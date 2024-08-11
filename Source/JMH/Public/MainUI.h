@@ -96,10 +96,10 @@ public:
 	//UPROPERTY(meta = (BindWidget))
 	//class UButton* Btn_JIN;
 
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,meta = (BindWidget))
 	class UButton* Btn_Paul;
 
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,meta = (BindWidget))
 	class UButton* Btn_Random;
 
 	//UPROPERTY(meta = (BindWidget))
@@ -200,10 +200,10 @@ public:
 	UFUNCTION()
 	void ChooseCharactter(int32 characnum);
 
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable)
 	void OnClickedPaul();
 
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable)
 	void OnClickedRandom();
 
 	UFUNCTION()

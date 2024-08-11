@@ -227,6 +227,7 @@ void UMainUI::OnClickedPaul()
 
 void UMainUI::OnClickedRandom()
 {
+	GEngine->AddOnScreenDebugMessage(-6 , 5.f , FColor::Red , TEXT("OnClickedRandom!!!!!!!"));
 	//if(B)
 		bPlayer1Charac = true;
 	   ChooseCharactter(1);
