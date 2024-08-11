@@ -13,9 +13,11 @@ UCLASS()
 class LSJ_API UAIStateKnockDown : public UAIStateComponent
 {
 	GENERATED_BODY()
-	float knockDownTime = 1.0f;
+	float knockDownTime = 10.0f;
 	float currentTime;
 public:
+	bool WasHit;
+	bool isKnockDown;
 	void SetAttackInfo ( FAttackInfoInteraction& pAttackInfo );
 	virtual void Enter ( class UAICharacterAnimInstance* pAnimInstance ) override;
 	virtual void Execute ( const float& deltatime ) override;

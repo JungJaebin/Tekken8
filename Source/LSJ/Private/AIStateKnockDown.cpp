@@ -21,20 +21,26 @@ void UAIStateKnockDown::Enter ( UAICharacterAnimInstance* pAnimInstance )
 	Super::Enter ( pAnimInstance );
 	owner->GetBlackboardComponent ( )->SetValueAsBool ( TEXT ( "IsKnockDown" ) , false );
 	currentTime = 0;
+	isKnockDown = true;
+
 }
 
 void UAIStateKnockDown::Execute ( const float& deltatime )
 {
 	currentTime += deltatime;
-	if ( currentTime >= knockDownTime )
+	if ( currentTime >= knockDownTime || WasHit )
 	{
+		WasHit = false;
 		owner->PlayAnimMontage ( animInstace->standUpMontage );
 		currentTime = 0;
+		isKnockDown = false;
 	}
 }
 
 void UAIStateKnockDown::Exit ( )
 {
+	WasHit = false;
+	isKnockDown = false;
 	currentTime = 0;
 	//animInstace->bKnockDown = false;
 	owner->ChangeState ( owner->GetAIStateIdle ( ) );
