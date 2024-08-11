@@ -206,7 +206,8 @@ AAICharacter::AAICharacter()
 	stateComboLaserAttack->attackInfoArray.Add(attack9);
 
 	FAttackInfoInteraction attackRHMiddle;
-	attackRHMiddle.KnockBackDirection = FVector ( 300.f , 0.f , 50.f ); //-0.5 보다 적게 예상 3*
+	attackRHMiddle.KnockBackDirection = FVector ( 200.f , 0.f , 00.f ); //-0.5 보다 적게 예상 3*
+	attackRHMiddle.KnockBackFallingDirection = FVector ( 300.f , 0.f , 50.f ); // 맞았을때
 	attackRHMiddle.DamageAmount = 23;
 	attackRHMiddle.DamagePoint = EDamagePointInteraction::Middle;
 	attackRHMiddle.HitFrame = 20; //HitFrame
@@ -221,7 +222,8 @@ AAICharacter::AAICharacter()
 
 	//내가 손해면 - 상대가 손해면 +
 	FAttackInfoInteraction attackTopLH;
-	attackTopLH.KnockBackDirection = FVector ( 300.f , 0.f , 50.f ); //-0.5 보다 적게 예상 3*
+	attackTopLH.KnockBackDirection = FVector ( 200.f , 0.f , 0.f ); // 가드했을때
+	attackTopLH.KnockBackFallingDirection = FVector ( 50.f , 0.f , 0.f ); // 맞았을때
 	attackTopLH.DamageAmount = 5;
 	attackTopLH.DamagePoint = EDamagePointInteraction::Top;
 	attackTopLH.HitFrame = 10; //HitFrame
@@ -235,7 +237,8 @@ AAICharacter::AAICharacter()
 
 	//내가 손해면 - 상대가 손해면 +
 	FAttackInfoInteraction attackLowerLF;
-	attackLowerLF.KnockBackDirection = FVector ( 100.f , 0.f , 0.f ); //-0.5 보다 적게 예상 3*
+	attackLowerLF.KnockBackDirection = FVector ( 200.f , 0.f , 0.f ); // 가드했을때
+	attackLowerLF.KnockBackFallingDirection = FVector ( 50.f , 0.f , 0.f ); // 맞았을때
 	attackLowerLF.DamageAmount = 7;
 	attackLowerLF.DamagePoint = EDamagePointInteraction::Lower;
 	attackLowerLF.HitFrame = 12; //HitFrame
@@ -492,7 +495,7 @@ void AAICharacter::SetStateIdle ( )
 void AAICharacter::OnAttackCollisionLF ( )
 {
 	//collisionLF->SetCollisionEnabled ( ECollisionEnabled::QueryOnly);
-	float radius = 20.0f;
+	float radius = 40.0f;
 	TArray<TEnumAsByte<EObjectTypeQuery>> traceObjectTypes;
 	traceObjectTypes.Add ( UEngineTypes::ConvertToObjectType ( ECollisionChannel::ECC_Pawn ) );
 	TArray<AActor*> ignoreActors;
@@ -823,29 +826,38 @@ bool AAICharacter::HitDecision ( FAttackInfoInteraction attackInfo , ACPP_Tekken
 			gameMode->UpdatePlayerHP(this,Hp);
 		// 확대할 위치 , 줌 정도 0.5 기본 , 흔들림정도 , 흔들림 시간
 		aMainCamera->RequestZoomEffect ( GetActorLocation ( ) , 0.5f , 10.0f , 0.3f );
-
-		ExitCurrentState ( ECharacterStateInteraction::HitGround );
-		if ( attackInfo.KnockBackDirection.Z > 0 || currentState == stateBound || currentState == stateHitFalling )
+		if ( currentState == stateKnockDown && stateKnockDown->isKnockDown )
 		{
-			stateHitFalling->SetAttackInfo ( attackInfo );
-			blackboardComp->SetValueAsBool ( TEXT ( "IsHitFalling" ) , true );
-		}
-		/*else if ( )
-		{
-			stateBound->SetAttackInfo ( attackInfo );
-			blackboardComp->SetValueAsBool ( TEXT ( "IsBound" ) , true );
-		}*/
-		else if ( currentState == stateKnockDown)
-		{
+			//공격 받을 때 지연 프레임을 받아서 HitFalling 상태에 전달하고
+			//HitFalling 상태에서 이전 상태가 stateKnockDown 이면 누워서 맞는 애니메이션을 지연 프레임만큼 실행하고
+			//해당 애니메이션이 끝나면 stateKnockDown 에 지연이 끝났다는 것을 알리고 stateKnockDown 상태로 변경한다.
+			ExitCurrentState ( ECharacterStateInteraction::HitGround );
 			stateKnockDown->SetAttackInfo ( attackInfo );
-			blackboardComp->SetValueAsBool ( TEXT ( "IsKnockDown" ) , true );
+			stateHitFalling->SetAttackInfo ( attackInfo );
+			stateHitFalling->WasKnockDown = true;
+			blackboardComp->SetValueAsBool ( TEXT ( "IsHitFalling" ) , true );
+			eCharacterState = ECharacterStateInteraction::Sit;
 		}
 		else
 		{
-			stateHit->SetAttackInfo ( attackInfo );
-			blackboardComp->SetValueAsBool ( TEXT ( "IsHit" ) , true );
+			ExitCurrentState ( ECharacterStateInteraction::HitGround );
+			if ( attackInfo.KnockBackFallingDirection.Z > 0 || currentState == stateBound || currentState == stateHitFalling )
+			{
+				stateHitFalling->SetAttackInfo ( attackInfo );
+				blackboardComp->SetValueAsBool ( TEXT ( "IsHitFalling" ) , true );
+			}
+			/*else if ( )
+			{
+				stateBound->SetAttackInfo ( attackInfo );
+				blackboardComp->SetValueAsBool ( TEXT ( "IsBound" ) , true );
+			}*/
+	
+			else
+			{
+				stateHit->SetAttackInfo ( attackInfo );
+				blackboardComp->SetValueAsBool ( TEXT ( "IsHit" ) , true );
+			}
 		}
-		
 		OnHit.Broadcast ( );
 	}
 

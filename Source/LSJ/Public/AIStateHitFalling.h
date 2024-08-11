@@ -16,7 +16,12 @@ class LSJ_API UAIStateHitFalling : public UAIStateComponent
 	float maxLocationZ;
 	float currnetLocationZ;
 	float minLocationZ;
+	int32 currentFrame = 0;
+	int32 targetFrame = 0;
+	bool isExitOneMore;
+
 public:
+	bool WasKnockDown;
 	void SetAttackInfo ( FAttackInfoInteraction& pAttackInfo );
 	virtual void Enter ( class UAICharacterAnimInstance* pAnimInstance ) override;
 	virtual void Execute ( const float& deltatime ) override;

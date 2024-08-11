@@ -61,6 +61,8 @@ protected:
 public:
 	virtual void PlayMontageAtFrameRate ( UAnimMontage* montage , int32 nFrames , float frameRate );
 	UPROPERTY ( EditAnyWhere , BlueprintReadOnly , Category = Move )
+	UAnimMontage* hitKnockDownMontage;
+	UPROPERTY ( EditAnyWhere , BlueprintReadOnly , Category = Move )
 	UAnimMontage* hitTopMontage;
 	UPROPERTY ( EditAnyWhere , BlueprintReadOnly , Category = Move )
 	UAnimMontage* hitMiddleMontage;
