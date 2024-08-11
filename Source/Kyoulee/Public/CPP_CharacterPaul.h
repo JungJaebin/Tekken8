@@ -162,6 +162,7 @@ public:
 
 	void AnimationFrame ( );
 
+	void SetToRelativeLocationFrame ( FVector dir , int32 frame );
 	void SetToLocationFrame ( FVector dir , int32 frame );
 
 	void SetToLocationPoint ( float x , float y , float z );
