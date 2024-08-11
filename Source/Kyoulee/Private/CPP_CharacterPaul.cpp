@@ -239,6 +239,7 @@ bool ACPP_CharacterPaul::CheckKeyArray ( )
 		return false;
 	return true;
 }
+
 // 스킬 인포를 정의하기 위한 함수
 void ACPP_CharacterPaul::SetActtacInfoSkell ( EDamagePointInteraction damagePointInteraction, 
 	int32 damageAmount = 0 , int32 actionFrame = 0, int32 retrieveFrame = 0,
