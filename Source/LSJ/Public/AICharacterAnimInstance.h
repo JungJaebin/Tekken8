@@ -89,6 +89,8 @@ public:
 	bool bFalling;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite )
 	bool bRun;
+		UPROPERTY(VisibleAnywhere, BlueprintReadWrite )
+	bool bDie;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite )
 	bool bKnockDown;
 	 // Animation Montage가 끝났을 때 호출될 함수
