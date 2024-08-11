@@ -45,7 +45,7 @@ protected:
 	virtual void BeginPlay() override;
 
 
-public:
+public: 
 
 	UPROPERTY()
 	class UMainGameInstance_MH* MainGameInstance;

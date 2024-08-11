@@ -3,6 +3,7 @@
 
 #include "MainUI.h"
 
+#include "EnhancedInputComponent.h"
 #include "MainGameInstance_MH.h"
 #include "Components/Button.h"
 #include "Components/Overlay.h"
@@ -12,7 +13,7 @@
 void UMainUI::NativeConstruct()
 {
 	Super::NativeConstruct();
-
+	
 	MainGameInstance = Cast<UMainGameInstance_MH>(GetWorld()->GetGameInstance());
 	//ui클릭용 B,O 키 바인드해서 각자 캐릭터 선택할 수 있게 하기 // N,P는 취소
 	//버튼 바인드
@@ -255,3 +256,4 @@ void UMainUI::OnClickedEmptyBack()
 {
 	ove_Empty->SetVisibility(ESlateVisibility::Collapsed);
 }
+

@@ -15,10 +15,10 @@ class JMH_API UMainUI : public UUserWidget
 {
 	GENERATED_BODY()
 protected:
-	virtual void NativeConstruct() override;
 	
 public:
-
+	virtual void NativeConstruct() override;
+	
 	//widget
 	UPROPERTY()
 	class UMainGameInstance_MH* MainGameInstance;
@@ -215,4 +215,8 @@ public:
 	//기타
 	UFUNCTION()
 	void OnClickedEmptyBack();
+
+
+	
+	
 };
