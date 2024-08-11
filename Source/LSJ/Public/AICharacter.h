@@ -52,9 +52,13 @@ class LSJ_API AAICharacter : public ACPP_Tekken8CharacterParent
 	class UBlackboardComponent* blackboardComp;
 
 	void SetAttackInfoOwnerOpposite ( FAttackInfoInteraction& attackInfo );
+
 public:
 	// Sets default values for this character's properties
 	AAICharacter();
+
+	//시작움직임설정
+	virtual void StartMove ( );
 
 	//이펙트
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Default")
@@ -92,8 +96,11 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-
-public:	
+	bool isResume;
+	bool isPause;
+	void PauseAI ( );
+	void ResumeAI ( );
+public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 	// Called to bind functionality to input

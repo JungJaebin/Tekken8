@@ -52,7 +52,7 @@ void UAIStateHitFalling::Enter ( UAICharacterAnimInstance* pAnimInstance )
 
 	if ( WasKnockDown )
 	{ //누워있을때 맞는 애니메이션 실행
-		animInstace->StopAllMontages ( 0.1f );
+		animInstace->StopAllMontages ( 0.5f );
 		animInstace->PlayMontageAtFrameRate ( animInstace->hitKnockDownMontage,attackInfoArray[0].RetrieveFrame + attackInfoArray[0].OppositeHitFrame , 30.0f );
 	}
 	else
@@ -81,7 +81,7 @@ void UAIStateHitFalling::Execute ( const float& deltatime )
 
 	if ( owner->GetMesh ( )->GetSocketLocation ( TEXT ( "spine_01" ) ).Z  < -85.f )
 	{
-		if ( false==(owner->GetCurrentState ( ) == owner->GetAIStateKnockDown ( ) && owner->GetAIStateKnockDown ( )->isKnockDown) )
+		if ( !WasKnockDown )
 			Exit();
 	}
 	currentFrame++;

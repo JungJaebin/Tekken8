@@ -56,13 +56,17 @@ void UAIStateBound::Execute ( const float& deltatime )
 		FVector NewLocation = owner->GetActorLocation ( ) + (Gravity);
 		owner->SetActorLocation ( NewLocation );
 	}
-	else if (false == owner->GetCharacterMovement ( )->IsFalling ( )&& owner->GetActorLocation().Z<-80.f)
-		Exit ();
+	else if ( false == owner->GetCharacterMovement ( )->IsFalling ( ) && owner->GetActorLocation ( ).Z < -80.f )
+	{
+		owner->GetBlackboardComponent ( )->SetValueAsBool ( TEXT ( "IsKnockDown" ) , true );
+		Exit ( );
+	}
+
 }
 
 void UAIStateBound::Exit ( )
 {
 	animInstace->bKnockDown = true;
-	owner->GetBlackboardComponent ( )->SetValueAsBool ( TEXT ( "IsKnockDown" ) , true );
+
 	Super::Exit ( );
 }
