@@ -6,9 +6,14 @@
 #include "CPP_CharacterPaul.h"
 #include "AICharacter.h"
 #include "Components/SphereComponent.h"
+
+
+
 void UAIStateAttackLH::Enter ( UAICharacterAnimInstance* pAnimInstance )
 {
 	Super::Enter ( pAnimInstance );
+	attackCount = 0;
+
 	startLocation = owner->GetMesh ( )->GetBoneLocation ( (TEXT ( "head" )) );
 	//공격거리 head 기준 174.0f RH
 	//공격거리 head 기준 92.0f LH

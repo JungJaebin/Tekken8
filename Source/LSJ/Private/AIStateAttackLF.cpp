@@ -8,6 +8,7 @@
 void UAIStateAttackLF::Enter ( UAICharacterAnimInstance* pAnimInstance )
 {
 	Super::Enter ( pAnimInstance );
+	attackCount = 0;
 
 	startLocation = owner->GetMesh ( )->GetBoneLocation ( (TEXT ( "head" )) );
 	startLocation.Z = 0;

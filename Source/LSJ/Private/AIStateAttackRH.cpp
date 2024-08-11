@@ -9,6 +9,8 @@
 void UAIStateAttackRH::Enter ( UAICharacterAnimInstance* pAnimInstance )
 {
 	Super::Enter(pAnimInstance);
+	attackCount = 0;
+
 	startLocation = owner->GetMesh ( )->GetBoneLocation ( (TEXT ( "head" )) );
 	//공격거리 head 기준 175.0f RH Middle
 	//공격거리 head 기준 81.0f LH Top

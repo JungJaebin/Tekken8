@@ -41,6 +41,8 @@ class LSJ_API AAICharacter : public ACPP_Tekken8CharacterParent
 	UPROPERTY ( )
 	class UAIStateAttackLH* stateAttackLH;
 	UPROPERTY ( )
+	class UAIStateKnockDown* stateKnockDown;
+	UPROPERTY ( )
 	class UAIStateComboLaserAttack* stateComboLaserAttack;
 	UPROPERTY ( )
 	class UAIStateWalkCross* stateWalkCross;
@@ -85,7 +87,8 @@ public:
 	class UBoxComponent* collisionMiddle;
 	UPROPERTY ( EditDefaultsOnly )
 	class UBoxComponent* collisionLower;
-
+	//UPROPERTY ( EditDefaultsOnly )
+	//class UCapsuleComponent* collisionBody;
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -104,6 +107,7 @@ public:
 	float GetBTWDistance ( );
 	// 상태 이동 객체에 대한 접근 메서드 추가
 	void SetStateIdle();
+	UAIStateKnockDown* GetAIStateKnockDown ( ) const { return stateKnockDown; }
 	UAIStateWalkCross* GetAIStateWalkCross ( ) const { return stateWalkCross; }
 	IAIStateInterface* GetCurrentState ( ) const { return currentState; }
 	UAIStateIdle* GetAIStateIdle ( ) const { return stateIdle; }
