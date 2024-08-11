@@ -282,7 +282,6 @@ public:
 	void CommandMoveLateralDownLoop( );
 	void CommandLeadJab ( );
 	void CommandCrossStaight ( );
-	void CommandCrossStaight2 ( );
 	void CommandJingun ( );
 	void CommandHighKick ();
 	void CommandSitJab ( );

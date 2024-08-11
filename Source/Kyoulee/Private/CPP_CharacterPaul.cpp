@@ -144,9 +144,12 @@ void ACPP_CharacterPaul::Tick ( float DeltaTime )
 	sAttackInfo.ActionFrame--;
 	iCurrFrame++;
 
+	if ( this->Hp <= 0 )
+		this->bIsDead = true;
+	else
+		this->bIsDead = false;
 	if ( this->bIsDead )
 		return;
-
 	// 다음 행동 정의
 	this->FrameSystem ( );
 }
@@ -780,7 +783,7 @@ void ACPP_CharacterPaul::CommandMoveBack ( )
 
 	eCharacterState = ECharacterStateInteraction::GuardStand;
 
-	this->SetToRelativeLocationFrame ( FVector ( -0.5 , 0 , 0 ) , 5 );
+	this->SetToRelativeLocationFrame ( FVector ( -1 , 0 , 0 ) , 5 );
 	this->sFrameStatus.FrameUsing = 2;
 }
 
@@ -1216,8 +1219,6 @@ bool ACPP_CharacterPaul::HitDecision ( FAttackInfoInteraction attackInfoHit , AC
 	this->Hp -= attackInfoHit.DamageAmount;
 	this->GameModeMH->UpdatePlayerHP(this,this->Hp);
 
-	if (this->Hp < 0 )
-		this->bFalling = true;
 	// 좀 있다 이동 시키기
 	this->eCharacterState = ECharacterStateInteraction::HitGround;
 	//camera 효과 추가하기s
