@@ -235,8 +235,6 @@ public:
 	FCommandTree* sTempCommand;
 	TArray<int32> sCurrCommandKeys;
 
-	int32 CountIdleFrame = 0;
-	int32 CountStarFrame = 0;
 	int32 currKeyValue = 0;
 	int32 nextKeyValue = 0;
 
@@ -271,6 +269,7 @@ public:
 	void CommandStar ( );
 	void CommandEnd ( );
 	void CommandMoveForward ( );
+	void CommandMoveForwardLoop ( );
 	void CommandMoveForwarDash();
 	void CommandMoveBack ();
 	void CommandMoveBackDash();
