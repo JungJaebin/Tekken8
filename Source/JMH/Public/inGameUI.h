@@ -76,6 +76,9 @@ public:
 	UPROPERTY(EditAnywhere,meta=(BindWidget),Category="MySettings")
 	class UCanvasPanel* can_Draw;
 
+	UPROPERTY(EditAnywhere,meta=(BindWidget),Category="MySettings")
+	class UCanvasPanel* can_KO;
+
 	//UI 애니메이션
 	
 	UPROPERTY(meta = (BindWidgetAnim), Transient)

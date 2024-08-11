@@ -32,48 +32,51 @@ void AGameMode_MH::BeginPlay()
 	IsLeftSide = MainGameInstance->IsPlayerOnLeftSide;
 	//선택한 모드에 따라 캐릭터 스폰
 	//==1. PvsP
-	if(GameModeIndex==1)
+	if (GameModeIndex == 1)
 	{
-		static ConstructorHelpers::FClassFinder<ACPP_CharacterPaul> Player1ClassFinder(TEXT("/Game/Kyoulee/BluePrints/MyCPP_CharacterPaul.MyCPP_CharacterPaul"));
+		static ConstructorHelpers::FClassFinder<ACPP_CharacterPaul> Player1ClassFinder(
+			TEXT("/Game/Kyoulee/BluePrints/MyCPP_CharacterPaul.MyCPP_CharacterPaul"));
 		if (Player1ClassFinder.Succeeded())
 		{
 			Player1Class = Player1ClassFinder.Class;
 		}
 
-		static ConstructorHelpers::FClassFinder<ACPP_CharacterPaul> Player2ClassFinder(TEXT("/Game/Kyoulee/BluePrints/MyCPP_CharacterPaul.MyCPP_CharacterPaul"));
+		static ConstructorHelpers::FClassFinder<ACPP_CharacterPaul> Player2ClassFinder(
+			TEXT("/Game/Kyoulee/BluePrints/MyCPP_CharacterPaul.MyCPP_CharacterPaul"));
 		if (Player2ClassFinder.Succeeded())
 		{
 			Player2Class = Player2ClassFinder.Class;
 		}
 	}
 	//==2. PvsAi
-	else if (GameModeIndex==2)
+	else if (GameModeIndex == 2)
 	{
 		//Ai모드라면 선택한 위치에 플레이어 스폰
 		//IsLeftSide true=player1스폰(왼쪽),false=player2스폰(오른쪽)
-		if(IsLeftSide)
+		if (IsLeftSide)
 		{
-			static ConstructorHelpers::FClassFinder<ACPP_CharacterPaul> Player1ClassFinder(TEXT("/Game/Kyoulee/BluePrints/MyCPP_CharacterPaul.MyCPP_CharacterPaul"));
+			static ConstructorHelpers::FClassFinder<ACPP_CharacterPaul> Player1ClassFinder(
+				TEXT("/Game/Kyoulee/BluePrints/MyCPP_CharacterPaul.MyCPP_CharacterPaul"));
 			if (Player1ClassFinder.Succeeded())
 			{
 				Player1Class = Player1ClassFinder.Class;
 			}
 
-			Player2Class=nullptr;
+			Player2Class = nullptr;
 		}
 		else
 		{
-			Player1Class=nullptr;
-			
-			static ConstructorHelpers::FClassFinder<ACPP_CharacterPaul> Player2ClassFinder(TEXT("/Game/Kyoulee/BluePrints/MyCPP_CharacterPaul.MyCPP_CharacterPaul"));
+			Player1Class = nullptr;
+
+			static ConstructorHelpers::FClassFinder<ACPP_CharacterPaul> Player2ClassFinder(
+				TEXT("/Game/Kyoulee/BluePrints/MyCPP_CharacterPaul.MyCPP_CharacterPaul"));
 			if (Player2ClassFinder.Succeeded())
 			{
 				Player2Class = Player2ClassFinder.Class;
 			}
-
 		}
 	}
-	
+
 	//플레이어 A,B 스폰
 	if (this->Player1Class)
 	{
@@ -199,6 +202,11 @@ void AGameMode_MH::CountDown(float DeltaTime)
 		{
 			//타임 종료
 			gameTimer = 0;
+
+			if (inGameUI)
+			{
+				inGameUI->ShowTextVisibility(TEXT("can_TimeUp"));
+			}
 			SetGameState(EGameState::RoundEnd);
 		}
 		else
@@ -256,7 +264,7 @@ void AGameMode_MH::HandleNewState(EGameState NewState)
 			inGameUI->ShowRoundText(++CurrentRoundNum);
 		}
 	//5초후 라운드 시작 //인풋 막아두기rl
-		GetWorld()->GetTimerManager().SetTimer(TimerHandle , this , &AGameMode_MH::RoundStart , 2.25f , false);
+		GetWorld()->GetTimerManager().SetTimer(TimerHandle , this , &AGameMode_MH::RoundStart , 2.00f , false);
 
 		GEngine->AddOnScreenDebugMessage(-5 , 5.f , FColor::Red , TEXT("RoundStart"));
 		break;
@@ -270,11 +278,7 @@ void AGameMode_MH::HandleNewState(EGameState NewState)
 
 	case EGameState::RoundEnd:
 
-		if (inGameUI)
-		{
-			inGameUI->ShowTextVisibility(TEXT("can_TimeUp"));
-		}
-	//플레이어 인풋 막기
+		//플레이어 인풋 막기
 		DisablePlayerInput();
 	// 라운드 종료 처리
 	//HP가 0이 되었을 때 호출,
@@ -305,7 +309,19 @@ void AGameMode_MH::HandleNewState(EGameState NewState)
 			PlayerInfoUI->HiddenEndHP();
 		}
 		CheckFinalWinner();
-		
+		if (inGameUI)
+		{
+			inGameUI->ShowTextVisibility(TEXT("can_YouWin"));
+		}
+		if(MainGameInstance)
+		{
+		 if(GameModeIndex==1)
+		 {
+		 	//카메라 승리한 플레이어 비추기 
+		 	inGameUI->ShowTextVisibility(TEXT("can_YouWin"));
+		 }
+		}
+
 	//게임 종료 처리
 	//승자 영상 출력
 		break;
@@ -478,11 +494,11 @@ void AGameMode_MH::HandleRoundEnd(AActor* RoundWinner)
 	{
 		UE_LOG(LogTemp , Log , TEXT("Round Winner: %s") , *RoundWinner->GetName());
 
-		if(Player1Score==Player2Score)
+		if (Player1Score == Player2Score)
 		{
 			inGameUI->ShowTextVisibility(TEXT("can_Draw"));
 		}
-		else if(RoundWinner==playerA)
+		else if (RoundWinner == playerA)
 		{
 			//플레이어A 영상 송출
 		}
@@ -534,6 +550,10 @@ void AGameMode_MH::CheckPlayerHP()
 		// HP가 0이거나 낮은 경우 라운드 종료 상태로 변경
 		if ((player1HP <= 0 || player2HP <= 0) && !bHasRoundEnded)
 		{
+			if (inGameUI)
+			{
+				inGameUI->ShowTextVisibility(TEXT("can_KO"));
+			}
 			HandleNewState(EGameState::RoundEnd);
 			bHasRoundEnded = true;
 			bStartRound = false; // 라운드 종료 플래그 설정		

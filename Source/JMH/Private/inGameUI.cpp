@@ -93,6 +93,7 @@ void UinGameUI::HideTextVisibility(const FString& TextName)
 		can_TimeUp->SetVisibility(ESlateVisibility::Collapsed);
 		can_YouWin->SetVisibility(ESlateVisibility::Collapsed);
 		can_YouLose->SetVisibility(ESlateVisibility::Collapsed);
+		can_KO->SetVisibility(ESlateVisibility::Collapsed);
 		
 		return;
 	}
