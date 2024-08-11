@@ -31,7 +31,8 @@ void UAIStateHit::Enter ( UAICharacterAnimInstance* pAnimInstance )
 
 		// 반전된 벡터에 강도 적용
 		FVector LaunchVelocity = direction * -1.f * attackInfoArray[0].KnockBackFallingDirection.X;
-		owner->LaunchCharacter ( LaunchVelocity , true , true );
+		//owner->LaunchCharacter ( LaunchVelocity , true , true );
+		owner->GetMesh ()->AddForceAtLocation ( LaunchVelocity , owner->aOpponentPlayer->GetActorLocation());
 		//owner->GetCharacterMovement ( )->AddImpulse ( attackInfoArray[0].KnockBackDirection * 100.0f , true );
 	}
 

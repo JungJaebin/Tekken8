@@ -92,6 +92,10 @@ void UAICharacterAnimInstance::PlayMontageAtFrameRate ( UAnimMontage* montage , 
 
 UAICharacterAnimInstance::UAICharacterAnimInstance ( )
 {
+    static ConstructorHelpers::FObjectFinder <UAnimMontage> hitFallingRHMontageFinder
+    ( TEXT ( "/Script/Engine.AnimMontage'/Game/LSJ/Animation/FinalAnimation/A_FallBack_Mid_Roll2_Montage.A_FallBack_Mid_Roll2_Montage'" ) ); //"/Script/Engine.AnimSequence'/Game/Jaebin/Kazuya/Walk_Forward/Walking_Anim.Walking_Anim'" ) );
+    if ( hitFallingRHMontageFinder.Succeeded ( ) )
+        hitFallingRHMontage = hitFallingRHMontageFinder.Object;
     static ConstructorHelpers::FObjectFinder <UAnimMontage> hitKnockDownMontageFinder
     ( TEXT ( "/Script/Engine.AnimMontage'/Game/LSJ/Animation/FinalAnimation/FallBack2_Montage.FallBack2_Montage'" ) ); //"/Script/Engine.AnimSequence'/Game/Jaebin/Kazuya/Walk_Forward/Walking_Anim.Walking_Anim'" ) );
     if ( hitKnockDownMontageFinder.Succeeded ( ) )
