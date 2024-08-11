@@ -545,6 +545,14 @@ void ACPP_CharacterPaul::SettingCommandTree ( )
 
 	this->mCurrCommandTree = mBaseCommandTree;
 	this->sCurrCommand = mBaseCommandTree[0];
+
+	/**
+	 * combo Command
+	 */
+
+	this->AddCommandBaseTree ( { 0 } , i3key + RP , 0 , 3 , & ACPP_CharacterPaul::CommandBullA );
+	this->AddCommandBaseTree ( { 0, i3key + RP, 0}, 0 , 0 , 10 , & ACPP_CharacterPaul::CommandEnd );
+
 }
 
 
@@ -707,7 +715,7 @@ void ACPP_CharacterPaul::CommandStarTest2 ( )
 {
 	if ( DebugMode )
 		UE_LOG ( LogTemp , Warning , TEXT ( "CommandStarTest2 Pressed" ) );
-	this->eCharacterState = ECharacterStateInteraction::GuardStand;
+	//this->eCharacterState = ECharacterStateInteraction::GuardStand;
 	iCurrFrame = 0;
 }
 
@@ -718,6 +726,8 @@ void ACPP_CharacterPaul::CommandIdle ( )
    	if ( DebugMode )
    		UE_LOG ( LogTemp , Warning , TEXT ( "CommandIdle Pressed" ) );
 
+	if ( this->GetZValue() > 0)
+		return;
 	this->bCrouched =false;
 	this->bJumpping = false;
 	this->eCharacterState = ECharacterStateInteraction::GuardStand;
@@ -1131,13 +1141,54 @@ void ACPP_CharacterPaul::CommandSitSpineKick ( )
 	this->sFrameStatus.FrameUsing = sAttackInfo.ActionFrame + sAttackInfo.RetrieveFrame;
 }
 
+void ACPP_CharacterPaul::CommandBullA ( )
+{
+	if ( DebugMode )
+		UE_LOG ( LogTemp , Warning , TEXT ( "CommandSitJab Pressed" ) );
+
+	this->bCrouched = false;
+
+	this->eCharacterState = ECharacterStateInteraction::AttackMiddle;
+
+	SetActtacInfoSkell ( EDamagePointInteraction::Middle , 13 , 15 , 20, -8 , 42 , -5 , 42 );
+
+
+	sAttackInfo.skellEffectLocation = this->RelativePointVector ( 80 , -5 , 10 ) + this->GetActorLocation ( );
+	sAttackInfo.KnockBackDirection = this->RelativePointVector ( 100 , 0 , 400 );
+
+	this->SetAttackInfoOwnerOpposite ( ); // 내부 owner frame opposite frame 자동 세팅용 함수
+
+	sAttackInfo.cameraShake = 0;
+	sAttackInfo.cameraZoom = 0;
+	sAttackInfo.cameraDelay = 0;
+
+	this->SetToRelativeLocationFrame ( FVector ( 10 , 0 , 0 ) , 3 );
+
+
+	// 애니매이션 실행 부분
+	PlayMontageFrameSystem ( uMtgSitSpineKick );
+
+	this->sFrameStatus.FrameUsing = sAttackInfo.ActionFrame + sAttackInfo.RetrieveFrame;
+}
+
+float ACPP_CharacterPaul::GetZValue ( )
+{
+	
+	FHitResult data;
+
+	bool hit = GetWorld()->LineTraceSingleByChannel(data,this->GetActorLocation(), FVector::UpVector * -1000, ECollisionChannel::ECC_Visibility );
+	if (hit)
+		return data.Distance;
+
+	return 0;
+}
+
+
 bool ACPP_CharacterPaul::CommandAllStop ( )
 {
 	if ( DebugMode )
 		UE_LOG ( LogTemp , Warning , TEXT ( "CommandAllStop Pressed" ) );
 	
-	this->eCharacterState = ECharacterStateInteraction::Idle;
-
 	sAttackInfo.ActionFrame = -1;
 	this->sFrameStatus.FrameUsing = 1;
 	return 0;
@@ -1149,12 +1200,13 @@ bool ACPP_CharacterPaul::CommandAllStop ( )
 bool ACPP_CharacterPaul::HitDecision ( FAttackInfoInteraction attackInfoHit , ACPP_Tekken8CharacterParent* ownerHitPlayer )
 {
 	bMoveTo = false;
+	float falling = this->GetZValue();
 
 	if ( aMainCamera )
 		aMainCamera->RequestZoomEffect ( attackInfoHit.skellEffectLocation , attackInfoHit.cameraZoom , attackInfoHit.cameraShake , attackInfoHit.cameraDelay );
 	else
 		UE_LOG(LogTemp, Warning, TEXT("is Emtpy ") );
-	if ( attackInfoHit.DamagePoint == EDamagePointInteraction::Top && this->eCharacterState == ECharacterStateInteraction::GuardStand )
+	if ( falling < 100 && attackInfoHit.DamagePoint == EDamagePointInteraction::Top && this->eCharacterState == ECharacterStateInteraction::GuardStand )
 	{
 
 		this->sFrameStatus.FrameBlockUsing = attackInfoHit.OppositeGuardFrame;
@@ -1170,7 +1222,7 @@ bool ACPP_CharacterPaul::HitDecision ( FAttackInfoInteraction attackInfoHit , AC
 			UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), uNS_DefenceEffect, attackInfoHit.skellEffectLocation );
 		return false;
 	}
-	if ( attackInfoHit.DamagePoint == EDamagePointInteraction::Middle && this->eCharacterState == ECharacterStateInteraction::GuardStand )
+	if ( falling < 100 && attackInfoHit.DamagePoint == EDamagePointInteraction::Middle && this->eCharacterState == ECharacterStateInteraction::GuardStand )
 	{
 		this->sFrameStatus.FrameBlockUsing = attackInfoHit.OppositeGuardFrame;
 		this->SetToLocationFrame ( attackInfoHit.KnockBackDirection, 10 );
@@ -1187,7 +1239,7 @@ bool ACPP_CharacterPaul::HitDecision ( FAttackInfoInteraction attackInfoHit , AC
 
 		return false;
 	}
-	if ( attackInfoHit.DamagePoint == EDamagePointInteraction::Lower && this->eCharacterState == ECharacterStateInteraction::GuardSit )
+	if ( falling < 100 && attackInfoHit.DamagePoint == EDamagePointInteraction::Lower && this->eCharacterState == ECharacterStateInteraction::GuardSit )
 	{
 		this->sFrameStatus.FrameBlockUsing = attackInfoHit.OppositeGuardFrame;
 		this->SetToLocationFrame ( attackInfoHit.KnockBackDirection , 10 );
@@ -1201,12 +1253,14 @@ bool ACPP_CharacterPaul::HitDecision ( FAttackInfoInteraction attackInfoHit , AC
 
 		return false;
 	}
-	this->SetActorRotation ( UKismetMathLibrary::FindLookAtRotation ( this->GetActorLocation ( ) , this->aOpponentPlayer->GetActorLocation ( ) ) );
+	//this->SetActorRotation ( UKismetMathLibrary::FindLookAtRotation ( this->GetActorLocation ( ) , this->aOpponentPlayer->GetActorLocation ( ) ) );
 	this->sFrameStatus.FrameBlockUsing = attackInfoHit.OppositeHitFrame;
-	//this->SetToWorldLocationPoint ( attackInfoHit.KnockBackDirection );
+	this->SetToWorldLocationPoint ( attackInfoHit.KnockBackDirection );
 	this->SetToLocationFrame ( attackInfoHit.KnockBackDirection , 10 );
-	//LaunchCharacter ( (attackInfoHit.KnockBackDirection - this->GetActorLocation ( )) * 4 , true , true );
-
+	LaunchCharacter ( FVector(0,0, attackInfoHit.KnockBackDirection.Z) , true , true );
+	if (this->GetActorLocation().Z > 10 )
+		LaunchCharacter ( FVector ( 0 , 0 , 400) , true , true );
+	iCurrFrame = 0;
 	// heart animation 추가하기
 	if ( this->Hp > 0 )
 	{

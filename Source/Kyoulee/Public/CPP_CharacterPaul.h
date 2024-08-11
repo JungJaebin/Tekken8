@@ -294,6 +294,10 @@ public:
 	bool CommandAllStop ( );
 	void CommentHitFrameExecute( );
 
+	void CommandBullA();
+
+	float GetZValue();
+
 /**
  * @title : Interaction
  *
