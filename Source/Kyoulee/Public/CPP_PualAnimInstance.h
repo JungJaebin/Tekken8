@@ -33,11 +33,13 @@ public:
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite )
 	bool	bNuckDown;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite )
+	bool bDead;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite )
 	class ACPP_CharacterPaul* aOwner;
 
 	UFUNCTION ( )
 	void HandleOnMontageEnded ( UAnimMontage* Montage , bool bInterrupted );
-	bool bDead;
 };

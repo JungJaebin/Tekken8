@@ -235,8 +235,6 @@ public:
 	FCommandTree* sTempCommand;
 	TArray<int32> sCurrCommandKeys;
 
-	int32 CountIdleFrame = 0;
-	int32 CountStarFrame = 0;
 	int32 currKeyValue = 0;
 	int32 nextKeyValue = 0;
 
@@ -271,6 +269,7 @@ public:
 	void CommandStar ( );
 	void CommandEnd ( );
 	void CommandMoveForward ( );
+	void CommandMoveForwardLoop ( );
 	void CommandMoveForwarDash();
 	void CommandMoveBack ();
 	void CommandMoveBackDash();
@@ -283,7 +282,6 @@ public:
 	void CommandMoveLateralDownLoop( );
 	void CommandLeadJab ( );
 	void CommandCrossStaight ( );
-	void CommandCrossStaight2 ( );
 	void CommandJingun ( );
 	void CommandHighKick ();
 	void CommandSitJab ( );
@@ -296,9 +294,23 @@ public:
 	bool CommandAllStop ( );
 	void CommentHitFrameExecute( );
 
+	void CommandBullA();
+
+	float GetZValue();
+
 /**
  * @title : Interaction
  *
  */
 	virtual bool HitDecision ( FAttackInfoInteraction attackInfo , ACPP_Tekken8CharacterParent* ownerHitPlayer ) override;
+
+
+
+
+	UPROPERTY ( EditDefaultsOnly )
+	class UBoxComponent* collisionTop;
+	UPROPERTY ( EditDefaultsOnly )
+	class UBoxComponent* collisionMiddle;
+	UPROPERTY ( EditDefaultsOnly )
+	class UBoxComponent* collisionLower;
 };	            

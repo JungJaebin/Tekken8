@@ -76,6 +76,8 @@ void UPlayerInfoUI::UpdateHealthBars(float Player1CurrentHP , float Player1MaxHP
 		// 플레이어 1의 체력 바 업데이트
 		float Player1HealthPercentage = CalculateHealthPercentage(Player1CurrentHP , Player1MaxHP);
 		Pro_HPBarA->SetPercent(Player1HealthPercentage);
+		FString AHPString = FString::Printf(TEXT("%.0f") , Player1CurrentHP);
+		text_EndHPA->SetText(FText::FromString(AHPString));
 	}
 
 	if (Pro_HPBarB)
@@ -83,6 +85,8 @@ void UPlayerInfoUI::UpdateHealthBars(float Player1CurrentHP , float Player1MaxHP
 		// 플레이어 2의 체력 바 업데이트
 		float Player2HealthPercentage = CalculateHealthPercentage(Player2CurrentHP , Player2MaxHP);
 		Pro_HPBarB->SetPercent(Player2HealthPercentage);
+		FString BHPString = FString::Printf(TEXT("%.0f") , Player2CurrentHP);
+		text_EndHPB->SetText(FText::FromString(BHPString));
 	}
 }
 
@@ -152,6 +156,9 @@ void UPlayerInfoUI::InitRoundImages()
 
 void UPlayerInfoUI::UpdateEndHP(float playerAHP , float playerBHP)
 {
+	text_EndHPA->SetVisibility(ESlateVisibility::Visible);
+	text_EndHPB->SetVisibility(ESlateVisibility::Visible);
+	
 	//문자열로 변환
 	FString AHPString = FString::Printf(TEXT("%.0f") , playerAHP);
 	FString BHPString = FString::Printf(TEXT("%.0f") , playerBHP);
@@ -167,6 +174,12 @@ void UPlayerInfoUI::UpdateEndHP(float playerAHP , float playerBHP)
 		text_EndHPA->SetText(FText::FromString(AHPString));
 		text_EndHPA->SetText(FText::FromString(BHPString));
 	}
+}
+
+void UPlayerInfoUI::HiddenEndHP()
+{
+	text_EndHPA->SetVisibility(ESlateVisibility::Hidden);
+	text_EndHPB->SetVisibility(ESlateVisibility::Hidden);
 }
 
 void UPlayerInfoUI::RequestShakeEffect(float ShakeIntensity)
@@ -215,16 +228,3 @@ void UPlayerInfoUI::PlayHPShakeAnim(int32 playernum)
 	}
 }
 
-
-/*
-void UPlayerInfoUI::UpdateShakeEffect(float Value)
-{
-	if (Pro_HPBarA)
-	{
-		Pro_HPBarA->SetRenderTranslation(FVector2D(FMath::Sin(Value * PI) * ShakeAmount, 0));
-	}
-	if (Pro_HPBarB)
-	{
-		Pro_HPBarB->SetRenderTranslation(FVector2D(FMath::Sin(Value * PI) * ShakeAmount, 0));
-	}
-}*/
