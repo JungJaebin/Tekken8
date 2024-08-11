@@ -43,7 +43,7 @@ void UAIStateKnockDown::Exit ( )
 	isKnockDown = false;
 	currentTime = 0;
 	//animInstace->bKnockDown = false;
-	owner->ChangeState ( owner->GetAIStateIdle ( ) );
+	//owner->ChangeState ( owner->GetAIStateIdle ( ) );
 	Super::Exit ( );
 }
 
