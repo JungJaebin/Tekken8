@@ -8,16 +8,18 @@
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/PawnMovementComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
-
+#include "BehaviorTree/BlackBoardComponent.h"
+#include "BehaviorTree/BehaviorTreeComponent.h"
 void UAIStateRun::SetDistance ( float pDistance )
 {
-	distance = pDistance;
+	//distance = pDistance;
 }
 
 void UAIStateRun::Enter ( UAICharacterAnimInstance* pAnimInstance )
 {
 	Super::Enter ( pAnimInstance );
 	animInstace->bRun = true;
+	attackRange = owner->GetBlackboardComponent ( )->GetValueAsFloat(TEXT("AttackRange" ));
 }
 
 void UAIStateRun::Execute ( const float& deltatime )
@@ -29,7 +31,7 @@ void UAIStateRun::Execute ( const float& deltatime )
 	owner->LookTarget (deltatime);
 	owner->GetCharacterMovement()->AddInputVector(owner->GetActorForwardVector()*deltatime* moveSpeed );
 
-	if(distance>FVector::Dist( owner->GetActorLocation(),owner->aOpponentPlayer->GetActorLocation()))
+	if(owner->GetBTWDistance()<=attackRange)
 	{
 		Exit();
 		return;
@@ -39,6 +41,7 @@ void UAIStateRun::Execute ( const float& deltatime )
 void UAIStateRun::Exit ( )
 {
 	animInstace->bRun = false;
-	owner->SetStateIdle();
+	owner->GetBlackboardComponent ( )->SetValueAsEnum ( TEXT ( "ERandomAttack" ) , owner->ChangeAttackMotionDependingOpponentState ( ) );
+	owner->GetBlackboardComponent ( )->SetValueAsBool ( TEXT ( "InAttackRange" ) , true );
 	Super::Exit ( );
 }

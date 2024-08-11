@@ -73,8 +73,41 @@ void UAICharacterAnimInstance::NativeInitializeAnimation()
     OnMontageEnded.AddDynamic ( this , &UAICharacterAnimInstance::HandleOnMontageEnded );
 }
 
+void UAICharacterAnimInstance::PlayMontageAtFrameRate ( UAnimMontage* montage , int32 nFrames , float frameRate )
+{
+    if ( !montage ) return;
+
+    // 몽타주 길이 (초)
+    float montageLength = montage->GetPlayLength ( );
+
+    // 목표 시간 (초)
+    float targetDuration = nFrames / frameRate;
+
+    // 재생 속도 계산
+    float playRate = montageLength / targetDuration;
+
+    // 몽타주 실행
+    Montage_Play ( montage , playRate );
+}
+
 UAICharacterAnimInstance::UAICharacterAnimInstance ( )
 {
+    static ConstructorHelpers::FObjectFinder <UAnimMontage> hitKnockDownMontageFinder
+    ( TEXT ( "/Script/Engine.AnimMontage'/Game/LSJ/Animation/FinalAnimation/FallBack2_Montage.FallBack2_Montage'" ) ); //"/Script/Engine.AnimSequence'/Game/Jaebin/Kazuya/Walk_Forward/Walking_Anim.Walking_Anim'" ) );
+    if ( hitKnockDownMontageFinder.Succeeded ( ) )
+        hitKnockDownMontage = hitKnockDownMontageFinder.Object;
+    static ConstructorHelpers::FObjectFinder <UAnimMontage> knockDownMontageFinder
+    ( TEXT ( "/Script/Engine.AnimMontage'/Game/LSJ/Animation/FinalAnimation/Laying1_Montage.Laying1_Montage'" ) ); //"/Script/Engine.AnimSequence'/Game/Jaebin/Kazuya/Walk_Forward/Walking_Anim.Walking_Anim'" ) );
+    if ( knockDownMontageFinder.Succeeded ( ) )
+        knockDownMontage = knockDownMontageFinder.Object;
+    static ConstructorHelpers::FObjectFinder <UAnimMontage> standUpMontageFinder
+    ( TEXT ( "/Script/Engine.AnimMontage'/Game/LSJ/Animation/FinalAnimation/A_StandUp_Front2_Montage.A_StandUp_Front2_Montage'" ) ); //"/Script/Engine.AnimSequence'/Game/Jaebin/Kazuya/Walk_Forward/Walking_Anim.Walking_Anim'" ) );
+    if ( standUpMontageFinder.Succeeded ( ) )
+        standUpMontage = standUpMontageFinder.Object;
+    static ConstructorHelpers::FObjectFinder <UAnimMontage> hitLowerRFMontageFinder
+    ( TEXT ( "/Script/Engine.AnimMontage'/Game/LSJ/Animation/FinalAnimation/A_HitLeg_R_IP2_Montage.A_HitLeg_R_IP2_Montage'" ) ); //"/Script/Engine.AnimSequence'/Game/Jaebin/Kazuya/Walk_Forward/Walking_Anim.Walking_Anim'" ) );
+    if ( hitLowerRFMontageFinder.Succeeded ( ) )
+       hitLowerRFMontage = hitLowerRFMontageFinder.Object;
     static ConstructorHelpers::FObjectFinder <UAnimMontage> walkForwardMontageFinder
     ( TEXT ("/Script/Engine.AnimMontage'/Game/LSJ/Animation/FinalAnimation/Step_Forward1_Montage.Step_Forward1_Montage'")); //"/Script/Engine.AnimSequence'/Game/Jaebin/Kazuya/Walk_Forward/Walking_Anim.Walking_Anim'" ) );
     if ( walkForwardMontageFinder.Succeeded ( ) )
@@ -137,6 +170,10 @@ UAICharacterAnimInstance::UAICharacterAnimInstance ( )
     ( TEXT ( "/Script/Engine.AnimMontage'/Game/LSJ/Animation/FinalAnimation/KB_Pivot-R_T1_Montage.KB_Pivot-R_T1_Montage'" ) );
     if ( crossWalkCounterclockwiseMontageFinder.Succeeded ( ) )
         crossWalkCounterclockwiseMontage = crossWalkCounterclockwiseMontageFinder.Object;
+    static ConstructorHelpers::FObjectFinder <UAnimMontage>attackLowerLFMontageFinder
+    ( TEXT ( "/Script/Engine.AnimMontage'/Game/LSJ/Animation/FinalAnimation/AM_LowKick_Left1_Montage.AM_LowKick_Left1_Montage'" ) );
+    if ( attackLowerLFMontageFinder.Succeeded ( ) )
+        attackLowerLFMontage = attackLowerLFMontageFinder.Object;
     static ConstructorHelpers::FObjectFinder<UNiagaraSystem> NE ( TEXT ( "/Script/Niagara.NiagaraSystem'/Game/Jaebin/Effects/Laser.Laser'" ) );
     if ( NE.Succeeded ( ) )
     {
@@ -190,6 +227,11 @@ void UAICharacterAnimInstance::HandleOnMontageEnded ( UAnimMontage* Montage , bo
             owner->ExitCurrentState ( ECharacterStateInteraction::AttackLower );
         }
         else
+		if ( Montage == attackLHMontage )
+		{
+			owner->ExitCurrentState ( ECharacterStateInteraction::AttackLower );
+		}
+        else
             if ( Montage == attackRHMontage )
             {
                 owner->ExitCurrentState ( ECharacterStateInteraction::AttackLower );
@@ -225,6 +267,14 @@ void UAICharacterAnimInstance::HandleOnMontageEnded ( UAnimMontage* Montage , bo
         {
             owner->ExitCurrentState ( ECharacterStateInteraction::HitFalling );
         }
+         else if ( Montage == attackLowerLFMontage )
+        {
+            owner->ExitCurrentState ( ECharacterStateInteraction::AttackLower );
+        }
+         else
+        {
+            owner->ExitCurrentState ( ECharacterStateInteraction::AttackLower );
+        }
     }
 }
 
@@ -232,7 +282,10 @@ void UAICharacterAnimInstance::PlayComboLaserMontage()
 {
     Montage_Play(comboLaserMontage);
 }
-
+void UAICharacterAnimInstance::PlayKnockDownMontage ( )
+{
+    Montage_Play ( knockDownMontage );
+}
 void UAICharacterAnimInstance::PlayBoundMontage ( )
 {
     FAlphaBlendArgs a;
@@ -250,24 +303,25 @@ void UAICharacterAnimInstance::PlayCrossWalkCounterclockwiseMontage ( )
     Montage_Play ( crossWalkCounterclockwiseMontage );
 }
 
-void UAICharacterAnimInstance::PlayHitFallingMontage ( )
+void UAICharacterAnimInstance::PlayHitFallingMontage ( float nFrame , float frameRate )
 {
-    Montage_Play ( hitFallingMontage,0.5f);
+    //PlayMontageAtFrameRate( hitFallingMontage )
+    Montage_Play ( hitFallingMontage , 0.5f);
 }
 
-void UAICharacterAnimInstance::PlayHitFallingTurnMontage ( )
+void UAICharacterAnimInstance::PlayHitFallingTurnMontage ( float nFrame , float frameRate )
 {
     Montage_Play ( hitFallingTurnMontage , 0.5f );
 }
 
-void UAICharacterAnimInstance::PlayHitTopMontage ( )
+void UAICharacterAnimInstance::PlayHitTopMontage ( float nFrame , float frameRate )
 {
-    Montage_Play ( hitTopMontage );
+    PlayMontageAtFrameRate ( hitTopMontage , nFrame , frameRate );
 }
 
-void UAICharacterAnimInstance::PlayHitMiddleMontage ( )
+void UAICharacterAnimInstance::PlayHitMiddleMontage ( float nFrame , float frameRate )
 {
-    Montage_Play ( hitMiddleMontage );
+    PlayMontageAtFrameRate ( hitMiddleMontage , nFrame , frameRate );
 }
 
 void UAICharacterAnimInstance::PlayerWalkForwardMontage ( )
@@ -299,6 +353,12 @@ void UAICharacterAnimInstance::PlayeAttackLFMontage ( )
 {
     Montage_Play ( attackLFMontage );
 }
+
+void UAICharacterAnimInstance::PlayeAttackLowerLFMontage ( )
+{
+    Montage_Play ( attackLowerLFMontage );
+}
+
 void UAICharacterAnimInstance::PlayerIdleMontage ( )
 {
     //UAnimMontage* MontageToPlay, float InPlayRate/*= 1.f*/, EMontagePlayReturnType ReturnValueType, float InTimeToStartMontageAt, bool bStopAllMontages

@@ -162,6 +162,7 @@ public:
 
 	void AnimationFrame ( );
 
+	void SetToRelativeLocationFrame ( FVector dir , int32 frame );
 	void SetToLocationFrame ( FVector dir , int32 frame );
 
 	void SetToLocationPoint ( float x , float y , float z );
@@ -234,8 +235,6 @@ public:
 	FCommandTree* sTempCommand;
 	TArray<int32> sCurrCommandKeys;
 
-	int32 CountIdleFrame = 0;
-	int32 CountStarFrame = 0;
 	int32 currKeyValue = 0;
 	int32 nextKeyValue = 0;
 
@@ -270,6 +269,7 @@ public:
 	void CommandStar ( );
 	void CommandEnd ( );
 	void CommandMoveForward ( );
+	void CommandMoveForwardLoop ( );
 	void CommandMoveForwarDash();
 	void CommandMoveBack ();
 	void CommandMoveBackDash();
@@ -282,7 +282,6 @@ public:
 	void CommandMoveLateralDownLoop( );
 	void CommandLeadJab ( );
 	void CommandCrossStaight ( );
-	void CommandCrossStaight2 ( );
 	void CommandJingun ( );
 	void CommandHighKick ();
 	void CommandSitJab ( );

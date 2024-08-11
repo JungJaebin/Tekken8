@@ -13,7 +13,12 @@ UCLASS()
 class LSJ_API UAIStateAttackLF : public UAIStateComponent
 {
 	GENERATED_BODY()
-	class AAICharacter* aiCharacter;
+
+	float startFrame;
+	float endFrame;
+	float totalTime;
+	FVector startLocation;
+	bool btest;
 public:
 	virtual void Enter ( class UAICharacterAnimInstance* pAnimInstance ) override;
 	virtual void Execute ( const float& deltatime ) override;

@@ -30,17 +30,24 @@ void UAIStateHit::Enter ( UAICharacterAnimInstance* pAnimInstance )
 		direction.Normalize ( );
 
 		// 반전된 벡터에 강도 적용
-		FVector LaunchVelocity = direction * -1.f * attackInfoArray[0].KnockBackDirection.X;
+		FVector LaunchVelocity = direction * -1.f * attackInfoArray[0].KnockBackFallingDirection.X;
 		owner->LaunchCharacter ( LaunchVelocity , true , true );
 		//owner->GetCharacterMovement ( )->AddImpulse ( attackInfoArray[0].KnockBackDirection * 100.0f , true );
 	}
 
 	//공격 받는 애니메이션 추가
 	animInstace->StopAllMontages ( 0.1f );
-	if( attackInfoArray[0].DamagePoint == EDamagePointInteraction::Middle )
-		animInstace->PlayHitTopMontage ( );
+
+	if ( nullptr != attackInfoArray[0].hitMontage )
+		animInstace->PlayMontageAtFrameRate ( attackInfoArray[0].hitMontage , attackInfoArray[0].RetrieveFrame + attackInfoArray[0].OppositeHitFrame , 30.0f );
 	else
-		animInstace->PlayHitMiddleMontage();
+	{
+		if ( attackInfoArray[0].DamagePoint == EDamagePointInteraction::Top )
+			animInstace->PlayHitTopMontage ( attackInfoArray[0].RetrieveFrame + attackInfoArray[0].OppositeHitFrame , 30.0f );
+		else
+			animInstace->PlayHitMiddleMontage ( attackInfoArray[0].RetrieveFrame + attackInfoArray[0].OppositeHitFrame , 30.0f );
+	}
+
 
 
 }

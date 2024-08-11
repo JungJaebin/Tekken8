@@ -39,6 +39,10 @@ class LSJ_API AAICharacter : public ACPP_Tekken8CharacterParent
 	UPROPERTY ( )
 	class UAIStateHit* stateHit;
 	UPROPERTY ( )
+	class UAIStateAttackLH* stateAttackLH;
+	UPROPERTY ( )
+	class UAIStateKnockDown* stateKnockDown;
+	UPROPERTY ( )
 	class UAIStateComboLaserAttack* stateComboLaserAttack;
 	UPROPERTY ( )
 	class UAIStateWalkCross* stateWalkCross;
@@ -63,6 +67,8 @@ public:
 	void StateAttackLF ( class UAIStateAttackLF* val ) { stateAttackLF = val; }
 	class UAIStateAttackRH* GetAIStateAttackRH ( ) const { return stateAttackRH; }
 	void StateAttackRH ( class UAIStateAttackRH* val ) { stateAttackRH = val; }
+	class UAIStateAttackLH* GetAIStateAttackLH ( ) const { return stateAttackLH; }
+	void StateAttackLH ( class UAIStateAttackLH* val ) { stateAttackLH = val; }
 	class UAIStateComboLaserAttack* StateComboLaserAttack ( ) const { return stateComboLaserAttack; }
 	void StateComboLaserAttack ( class UAIStateComboLaserAttack* val ) { stateComboLaserAttack = val; }
 	//공격 콜리전
@@ -81,7 +87,8 @@ public:
 	class UBoxComponent* collisionMiddle;
 	UPROPERTY ( EditDefaultsOnly )
 	class UBoxComponent* collisionLower;
-
+	//UPROPERTY ( EditDefaultsOnly )
+	//class UCapsuleComponent* collisionBody;
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -94,9 +101,13 @@ public:
 	void ChangeState (class IAIStateInterface* NewState );
 	void UpdateState ( const float& deltatime );
 	void ExitCurrentState (ECharacterStateInteraction state );
-
+	//플레이어가 앉은 상태인지 공중상태인지를 판단하여 공격 모션이 달라진다. - AICharacter.cpp
+	int8 ChangeAttackMotionDependingOpponentState ( );
+	//상대 플레이어와의 거리
+	float GetBTWDistance ( );
 	// 상태 이동 객체에 대한 접근 메서드 추가
 	void SetStateIdle();
+	UAIStateKnockDown* GetAIStateKnockDown ( ) const { return stateKnockDown; }
 	UAIStateWalkCross* GetAIStateWalkCross ( ) const { return stateWalkCross; }
 	IAIStateInterface* GetCurrentState ( ) const { return currentState; }
 	UAIStateIdle* GetAIStateIdle ( ) const { return stateIdle; }

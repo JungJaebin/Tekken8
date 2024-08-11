@@ -8,7 +8,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/PawnMovementComponent.h"
 #include "Animation/AnimTypes.h"
-
+#include "BehaviorTree/BlackBoardComponent.h"
 void UAIStateWalkForward::SetDistance ( float pDistance )
 {
 	distance = pDistance;
@@ -17,9 +17,17 @@ void UAIStateWalkForward::SetDistance ( float pDistance )
 void UAIStateWalkForward::Enter (UAICharacterAnimInstance* pAnimInstance )
 {
 	Super::Enter(pAnimInstance);
-	
+	if ( nullptr == owner )
+		return;
 	if(nullptr == owner->aOpponentPlayer )
 		return;
+
+	attackRange = owner->GetBlackboardComponent ( )->GetValueAsFloat ( TEXT ( "AttackRange" ) );
+	GEngine->AddOnScreenDebugMessage ( -1 , 1.f , FColor::Red , FString::Printf ( TEXT ( "start GetBTWDistance : %f " ) , owner->GetBTWDistance() ) );
+	GEngine->AddOnScreenDebugMessage ( -1 , 1.f , FColor::Red , FString::Printf ( TEXT ( "attackRange : %f end" ) , attackRange ) );
+	UE_LOG(LogTemp,Error, TEXT ( "start GetBTWDistance : %f " ) , owner->GetBTWDistance ( ));
+	UE_LOG ( LogTemp , Error , TEXT ( "attackRange : %f end" ) , attackRange  );
+
 	animInstace->PlayerWalkForwardMontage();
 	//animInstace->StateWalkForward(true);
 	direction=owner->GetActorForwardVector ( );
@@ -49,10 +57,9 @@ void UAIStateWalkForward::Execute ( const float& deltatime )
 	Super::Execute ( deltatime );
 	if( nullptr==owner )
 		return;
-	if ( FMath::Abs ( lookPlayerRotator.Yaw - owner->GetActorRotation ( ).Yaw ) < 0.1 )
-		owner->LookTarget ( deltatime , lookPlayerRotator);
-	else
+	if ( nullptr == owner->aOpponentPlayer )
 		return;
+	ToLookTargetRotate ( deltatime );
 
 	//속도가 처음에 크고 끝에는 작아지게 하면 좋을 것 같다.
 	float moveSpeed;
@@ -68,17 +75,39 @@ void UAIStateWalkForward::Execute ( const float& deltatime )
 
 void UAIStateWalkForward::Exit ( )
 {
-	//animInstace->StateWalkForward ( false );
-	owner->SetStateIdle();
+	//공격거리 + 대시거리 보다 거리가 작거나 같다면 
+	// //대시 후 해당 공격 모션의 공격거리가 되었을때 플레이어가 앉은 상태인지 공중상태인지를 판단하여 공격 모션이 달라진다. - AICharacter.cpp
+	// //대시 후 해당 공격 모션의 공격거리가 닿지 않는다면 한번 더 대시 한다.
+	// //한번 더 대시 한 경우 랜덤으로 앉아 가드(일단 서서 가드) 하거나 공격( 플레이어가 앉은 상태인지 공중상태인지를 판단하여 공격 모션이 달라진다. - AICharacter.cpp)한다.
+
+	//대시 후 해당 공격 모션의 공격거리가 되었을때 플레이어가 앉은 상태인지 공중상태인지를 판단하여 공격 모션이 달라진다. - AICharacter.cpp
+	if ( owner->GetBTWDistance ( ) <= attackRange )
+	{
+		owner->GetBlackboardComponent ( )->SetValueAsEnum ( TEXT ( "ERandomAttack" ) , owner->ChangeAttackMotionDependingOpponentState ( ) );
+		owner->GetBlackboardComponent ( )->SetValueAsBool ( TEXT ( "InAttackRange" ) , true );
+	}
+	else 
+	{
+		//해당 공격 모션의 공격거리가 닿지 않는다면 한번 더 대시 한다.
+		
+		//한번 더 대시 한 경우 랜덤으로 앉아 가드(일단 서서 가드) 하거나 공격( 플레이어가 앉은 상태인지 공중상태인지를 판단하여 공격 모션이 달라진다. - AICharacter.cpp)한다.
+		if ( isOneMore )
+		{
+			int8 randNum = FMath::RandRange ( 0 , 1 );
+			if ( randNum )
+			{
+				//랜덤으로 앉아 가드(일단 서서 가드) 
+				owner->SetStateIdle ( );
+			}
+			else
+			{	
+				//공격( 플레이어가 앉은 상태인지 공중상태인지를 판단하여 공격 모션이 달라진다. - AICharacter.cpp)한다.
+				owner->GetBlackboardComponent ( )->SetValueAsEnum ( TEXT ( "ERandomAttack" ) , owner->ChangeAttackMotionDependingOpponentState ( ) );
+				owner->GetBlackboardComponent ( )->SetValueAsBool ( TEXT ( "InAttackRange" ) , true );
+			}
+		}
+		owner->GetBlackboardComponent ( )->SetValueAsBool ( TEXT ( "IsOneMoreDash" ) , isOneMore );
+	}
+	isOneMore = !isOneMore;
 	Super::Exit ( );
 }
-//void UAIStateWalkForward::TickComponent ( float DeltaTime , ELevelTick TickType , FActorComponentTickFunction* ThisTickFunction )
-//{
-//	Super::TickComponent ( DeltaTime , TickType , ThisTickFunction );
-//	lookPlayerRotator = UKismetMathLibrary::FindLookAtRotation ( owner->GetActorLocation ( ) , owner->aOpponentPlayer->GetActorLocation ( ) );
-//	owner->SetActorRotation ( FMath::RInterpConstantTo ( owner->GetActorRotation ( ) , lookPlayerRotator , DeltaTime ,200.0f ) );
-//	if( owner->GetDistanceTo( owner->aOpponentPlayer )<distance)
-//		Exit();
-//
-//	// ...
-//}
