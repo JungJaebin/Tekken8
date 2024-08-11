@@ -73,6 +73,7 @@ public:
 	int32 CounterFrame;			// 카운터 발생
 
 
+
 	FVector skellEffectLocation = FVector ( 0 );	// Effect Location 스킬 이펙트 및 콜리션 위치
 	FVector KnockBackDirection = FVector ( 0 );						// 넉백 수치 ( -1 , 1, z) : z = 높이 띄우는 값
 	FVector KnockBackFallingDirection = FVector ( 0 );
@@ -130,6 +131,7 @@ public:
 // 		OppositeCounterFrame = 0;
 // 		bGaurdBreaker = false;
 // 	}
+// 
 // 	FAttackInfoInteraction (EDamagePointInteraction pDamagePoint, FVector pKnockBackDirection, int16 pDamageAmount, int8 pHitFrame, int8 pGrd, int8 pNH, bool pbGaurdBreaker)
 // 	{
 // 		DamagePoint = pDamagePoint;
@@ -140,11 +142,16 @@ public:
 // 		OppositeGuardFrame = 0;
 // 		bGaurdBreaker = pbGaurdBreaker;
 // 	}
+
 	FColor debugColor;
 	//해당 공격받았을때 실행되는 몽타지
 	UAnimMontage* hitMontage;
 	//해당 공격이 가드되었을때 실행되는 몽타지
 	UAnimMontage* guardMontage;
+
+	class USoundBase* uMovementSound;
+	class USoundBase* uHitSound;
+	class USoundBase* uDefenceSound;
 };
 
 UCLASS()

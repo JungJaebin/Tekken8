@@ -13,6 +13,8 @@
 #include "../Plugins/FX/Niagara/Source/Niagara/Public/NiagaraFunctionLibrary.h"
 #include "CPP_PualAnimInstance.h"
 #include "Components/BoxComponent.h"
+#include "Kismet/GameplayStatics.h"
+#include "Sound/SoundBase.h"
 
 // Sets default values
 ACPP_CharacterPaul::ACPP_CharacterPaul ( )
@@ -206,6 +208,12 @@ bool ACPP_CharacterPaul::PlayNextAction()
 			iCurrFrame = 0;
 		if ( sCurrCommand){
 			sCurrCommand->action.Execute ( );
+
+			// 소리 추가
+			if ( this->sAttackInfo.uMovementSound )
+				UGameplayStatics::PlaySound2D ( GetWorld ( ) , this->sAttackInfo.uMovementSound );
+			this->sAttackInfo.uMovementSound = nullptr;
+
 			if ( sNextCommand )
 				sCurrCommand = sNextCommand;
 			else
@@ -959,6 +967,11 @@ void ACPP_CharacterPaul::CommandLeadJab ( )
 	// 애니매이션 실행 부분
 	PlayMontageFrameSystem ( uMtgLeadJab );
 
+	// 사운드 추가
+	sAttackInfo.uMovementSound = this->uSoundHitLefthand;
+	sAttackInfo.uHitSound = this->uSoundPaulWeakHit;
+	sAttackInfo.uDefenceSound = this->uSoundGuard;
+
 	this->sFrameStatus.FrameUsing = sAttackInfo.ActionFrame + sAttackInfo.RetrieveFrame;
 }
 
@@ -985,6 +998,11 @@ void ACPP_CharacterPaul::CommandCrossStaight ( )
 
 	// 애니매이션 실행 부분
 	PlayMontageFrameSystem ( this->uMtgCrossStaight );
+
+	// 사운드 추가
+	sAttackInfo.uMovementSound = this->uSoundHitRightHand;
+	sAttackInfo.uHitSound = this->uSoundPaulWeakHit;
+	sAttackInfo.uDefenceSound = this->uSoundGuard;
 
 	this->sFrameStatus.FrameUsing = sAttackInfo.ActionFrame + sAttackInfo.RetrieveFrame;
 	
@@ -1013,6 +1031,11 @@ void ACPP_CharacterPaul::CommandJingun ( )
 	// 애니매이션 실행 부분
 	PlayMontageFrameSystem ( uMtgJingun );
 
+	// 사운드 추가
+	sAttackInfo.uMovementSound = this->uSoundHitLeftFoot;
+	sAttackInfo.uHitSound = this->uSoundPaulWeakHit;
+	sAttackInfo.uDefenceSound = this->uSoundGuard;
+
 	this->sFrameStatus.FrameUsing = sAttackInfo.ActionFrame + sAttackInfo.RetrieveFrame;;
 }
 
@@ -1038,6 +1061,11 @@ void ACPP_CharacterPaul::CommandHighKick ( )
 
 	// 애니매이션 실행 부분
 	PlayMontageFrameSystem ( uMtgHighKick );
+
+	// 사운드 추가
+	sAttackInfo.uMovementSound = this->uSoundHitRightFoot;
+	sAttackInfo.uHitSound = this->uSoundPaulWeakHit;
+	sAttackInfo.uDefenceSound = this->uSoundGuard;
 
 	this->sFrameStatus.FrameUsing = sAttackInfo.ActionFrame + sAttackInfo.RetrieveFrame;
 }
@@ -1066,6 +1094,11 @@ void ACPP_CharacterPaul::CommandBungGuan ( )
 
 	// 애니매이션 실행 부분
 	PlayMontageFrameSystem ( uMtgBungGuan );
+
+	// 사운드 추가
+	sAttackInfo.uMovementSound = this->uSoundHitLefthand;
+	sAttackInfo.uHitSound = this->uSoundPaulWeakHit;
+	sAttackInfo.uDefenceSound = this->uSoundGuard;
 
 	this->sFrameStatus.FrameUsing = sAttackInfo.ActionFrame + sAttackInfo.RetrieveFrame;
 }
@@ -1096,6 +1129,11 @@ void ACPP_CharacterPaul::CommandJinJee ( )
 	// 애니매이션 실행 부분
 	PlayMontageFrameSystem ( uMtgLeadJab );
 
+	// 사운드 추가
+	sAttackInfo.uMovementSound = this->uSoundHitLefthand;
+	sAttackInfo.uHitSound = this->uSoundPaulStrongHit;
+	sAttackInfo.uDefenceSound = this->uSoundGuard;
+
 	this->sFrameStatus.FrameUsing = sAttackInfo.ActionFrame + sAttackInfo.RetrieveFrame;
 }
 
@@ -1123,6 +1161,11 @@ void ACPP_CharacterPaul::CommandSitJab( )
 
 	// 애니매이션 실행 부분
 	PlayMontageFrameSystem ( uMtgSitJab );
+
+	// 사운드 추가
+	sAttackInfo.uMovementSound = this->uSoundHitLefthand;
+	sAttackInfo.uHitSound = this->uSoundPaulWeakHit;
+	sAttackInfo.uDefenceSound = this->uSoundGuard;
 
 	this->sFrameStatus.FrameUsing = sAttackInfo.ActionFrame + sAttackInfo.RetrieveFrame;
 }
@@ -1154,6 +1197,11 @@ void ACPP_CharacterPaul::CommandSitSpineKick ( )
 	// 애니매이션 실행 부분
 	PlayMontageFrameSystem ( uMtgSitSpineKick );
 
+	// 사운드 추가
+	sAttackInfo.uMovementSound = this->uSoundHitLeftFoot;
+	sAttackInfo.uHitSound = this->uSoundPaulWeakHit;
+	sAttackInfo.uDefenceSound = this->uSoundGuard;
+
 	this->sFrameStatus.FrameUsing = sAttackInfo.ActionFrame + sAttackInfo.RetrieveFrame;
 }
 
@@ -1184,6 +1232,11 @@ void ACPP_CharacterPaul::CommandBullA ( )
 	// 애니매이션 실행 부분
 	PlayMontageFrameSystem ( uMtgSitSpineKick );
 
+	// 사운드 추가
+	sAttackInfo.uMovementSound = this->uSoundHitRightHand;
+	sAttackInfo.uHitSound = this->uSoundPaulStrongHit;
+	sAttackInfo.uDefenceSound = this->uSoundGuard;
+
 	this->sFrameStatus.FrameUsing = sAttackInfo.ActionFrame + sAttackInfo.RetrieveFrame;
 }
 
@@ -1192,6 +1245,7 @@ float ACPP_CharacterPaul::GetZValue ( )
 	
 	FHitResult data;
 
+	// 
 	bool hit = GetWorld()->LineTraceSingleByChannel(data,this->GetActorLocation(), FVector::UpVector * -1000, ECollisionChannel::ECC_Visibility );
 	if (hit)
 		return data.Distance;
@@ -1226,14 +1280,14 @@ bool ACPP_CharacterPaul::HitDecision ( FAttackInfoInteraction attackInfoHit , AC
 	{
 
 		this->sFrameStatus.FrameBlockUsing = attackInfoHit.OppositeGuardFrame;
-		// this->SetToWorldLocationPoint ( (attackInfoHit.KnockBackDirection - this->GetActorLocation ( )) / 2 + this->GetActorLocation ( ));
 		this->SetToLocationFrame ( attackInfoHit.KnockBackDirection, 10 );
 
-		//LaunchCharacter( (attackInfoHit.KnockBackDirection - this->GetActorLocation ( )) * 2 , true, true );
 		// defense animation 추가하기
 		PlayMontageFrameSystem ( uMtgDefence );
 		// 디펜스 파티클
-
+		
+		// 소리 추가
+		UGameplayStatics::PlaySound2D ( GetWorld ( ) , this->sAttackInfo.uDefenceSound );
 		if ( uNS_DefenceEffect && this->Hp > 0 )
 			UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), uNS_DefenceEffect, attackInfoHit.skellEffectLocation );
 		return false;
@@ -1250,6 +1304,9 @@ bool ACPP_CharacterPaul::HitDecision ( FAttackInfoInteraction attackInfoHit , AC
 		else
 			PlayMontageFrameSystem ( uMtgDefence );
 
+		// 소리 추가
+		UGameplayStatics::PlaySound2D ( GetWorld ( ) , this->sAttackInfo.uDefenceSound );
+
 		if ( uNS_DefenceEffect && this->Hp > 0 )
 			UNiagaraFunctionLibrary::SpawnSystemAtLocation ( GetWorld ( ) , uNS_DefenceEffect , attackInfoHit.skellEffectLocation );
 
@@ -1264,6 +1321,9 @@ bool ACPP_CharacterPaul::HitDecision ( FAttackInfoInteraction attackInfoHit , AC
 		// defense animation 추가하기
 		PlayMontageFrameSystem ( uMtgSitDefence );
 
+		// 소리 추가
+		UGameplayStatics::PlaySound2D ( GetWorld ( ) , this->sAttackInfo.uDefenceSound );
+
 		if ( uNS_DefenceEffect && this->Hp > 0 )
 			UNiagaraFunctionLibrary::SpawnSystemAtLocation ( GetWorld ( ) , uNS_DefenceEffect , attackInfoHit.skellEffectLocation );
 
@@ -1274,8 +1334,15 @@ bool ACPP_CharacterPaul::HitDecision ( FAttackInfoInteraction attackInfoHit , AC
 	this->SetToWorldLocationPoint ( attackInfoHit.KnockBackDirection );
 	this->SetToLocationFrame ( attackInfoHit.KnockBackDirection , 10 );
 	LaunchCharacter ( FVector(0,0, attackInfoHit.KnockBackDirection.Z) , true , true );
-	if (this->GetActorLocation().Z > 10 )
+	if (this->GetZValue() > 10 )
 		LaunchCharacter ( FVector ( 0 , 0 , 400) , true , true );
+
+	if ( attackInfoHit.hitMontage != nullptr ) //내가 준 몽타지 실행
+	{
+		this->uAnim->StopAllMontages ( 0.1f );
+		//PlayAnimMontage ( attackInfoHit.hitMontage );
+	}
+
 	iCurrFrame = 0;
 	// heart animation 추가하기
 	if ( this->Hp > 0 )
@@ -1285,6 +1352,9 @@ bool ACPP_CharacterPaul::HitDecision ( FAttackInfoInteraction attackInfoHit , AC
 		else
 			PlayMontageFrameSystem ( uMtgIdleHit );
 	}
+	// 소리 추가
+	UGameplayStatics::PlaySound2D ( GetWorld ( ) , this->sAttackInfo.uHitSound );
+
 	// UI hit newHp 전달하기
 	this->Hp -= attackInfoHit.DamageAmount;
 	this->GameModeMH->UpdatePlayerHP(this,this->Hp);

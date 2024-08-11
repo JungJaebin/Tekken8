@@ -142,6 +142,7 @@ public:
 	bool bNuckDown = 0;
 	bool bDead = 0;
 
+
 	void SetActtacInfoSkell ( EDamagePointInteraction damagePointInteraction ,
 	int32 damageAmount , int32 actionFrame , int32 retrieveFrame ,
 	int32 missFrame , int32 hitFrame , int32 grardFrame , int32 counterFrame );
@@ -209,17 +210,6 @@ public:
 	 */
 	class AGameMode_MH* GameModeMH;
 	
-	/**
-	 * @title Particle Effect
-	 * @brief 파티클 이펙트에 대한
-	 */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect" )
-	UNiagaraSystem* uNS_HitEffect;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect" )
-	UNiagaraSystem* uNS_DefenceEffect;
-
-
 	/************************************************************************/
 	/*                커멘드 크리에 대한 정보                               */
 	/************************************************************************/
@@ -313,4 +303,44 @@ public:
 	class UBoxComponent* collisionMiddle;
 	UPROPERTY ( EditDefaultsOnly )
 	class UBoxComponent* collisionLower;
+
+
+	/**
+	 * @title Sound
+	 * @brief 사운드 대한 정보
+	 */
+	UPROPERTY(EditDefaultsOnly, Category="Sound" )
+	class USoundBase* uSoundEndPaul;
+	UPROPERTY(EditDefaultsOnly, Category="Sound" )
+	class USoundBase* uSoundGuard;
+	UPROPERTY(EditDefaultsOnly, Category="Sound" )
+	class USoundBase* uSoundPaulLastHit;
+	UPROPERTY(EditDefaultsOnly, Category="Sound" )
+	class USoundBase* uSoundPaulStrongHit;
+	UPROPERTY(EditDefaultsOnly, Category="Sound" )
+	class USoundBase* uSoundPaulWeakHit;
+	UPROPERTY(EditDefaultsOnly, Category="Sound" )
+	class USoundBase* uSoundHitLeftFoot;
+	UPROPERTY(EditDefaultsOnly, Category="Sound" )
+	class USoundBase* uSoundHitRightFoot;
+	UPROPERTY(EditDefaultsOnly, Category="Sound" )
+	class USoundBase* uSoundHitLefthand;
+	UPROPERTY(EditDefaultsOnly, Category="Sound" )
+	class USoundBase* uSoundHitRightHand;
+	
+	/**
+	 * @title Particle Effect
+	 * @brief 파티클 이펙트에 대한
+	 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect" )
+	UNiagaraSystem* uNS_HitEffect;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect" )
+	UNiagaraSystem* uNS_HitEffect2;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect" )
+	UNiagaraSystem* uNS_DefenceEffect;
+
+
+
 };	            
